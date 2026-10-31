@@ -1,0 +1,13 @@
+.next/
+node_modules/
+.env*
+!.env.example
+out/
+coverage/
+npm-debug.log*
+.analytics-log.json
+.DS_Store
+*.pem
+.turbo
+tsconfig.tsbuildinfo
+.impeccable/
