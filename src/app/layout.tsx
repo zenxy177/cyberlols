@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
+import { DynamicTabTitle } from "@/app/dynamic-tab-title";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Emir",
-  description: "Kişisel bio profili.",
+  title: "@warxy 🌙",
+  description: "Warxy • Kişisel bio profili.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
   robots: { index: true, follow: true },
 };
 
@@ -14,7 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <body>{children}</body>
+      <body>
+        <DynamicTabTitle text="@warxy" badge="🌙" />
+        {children}
+      </body>
     </html>
   );
 }

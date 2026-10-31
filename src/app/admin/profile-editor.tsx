@@ -721,6 +721,15 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
           avatar_url: form.avatar_url,
           background_url: form.background_url,
           background_video_url: form.background_video_url,
+          audio_url: form.audio_url,
+          audio_title: form.audio_title.trim() || "Arka Plan Müziği",
+          audio_artist: form.audio_artist.trim(),
+          default_volume: safeVolume,
+          click_to_enter_text: form.click_to_enter_text.trim() || "click to enter",
+          typewriter_lines:
+            cleanTypewriterLines.length > 0
+              ? cleanTypewriterLines
+              : ["Welcome to my profile.", "Moon Knight aesthetic."],
           discord_user_id: form.discord_user_id,
           discord_username: form.discord_username,
           discord_global_name: form.discord_global_name,
