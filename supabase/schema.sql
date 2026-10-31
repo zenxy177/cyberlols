@@ -131,7 +131,7 @@ create trigger set_profile_updated_at
   before update on public.profiles
   for each row execute function public.set_profile_updated_at();
 
-create or replace function public.increment_profile_views(profile_slug text default 'main')
+create or replace function public.increment_profile_views(profile_id text default 'main')
 returns bigint
 language plpgsql
 security definer
