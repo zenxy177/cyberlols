@@ -2886,24 +2886,24 @@ textarea:focus-visible {
 
 .guns-backdrop-video {
   position: absolute;
-  inset: -5%;
-  width: 110%;
-  height: 110%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  filter: blur(14px) brightness(0.38) saturate(120%);
   transform: translateZ(0);
+  transition: opacity 0.35s ease;
 }
 
 .guns-backdrop-image {
   position: absolute;
-  inset: -5%;
-  width: 110%;
-  height: 110%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(14px) brightness(0.38) saturate(120%);
   transform: translateZ(0);
+  transition: opacity 0.35s ease;
 }
 
 .guns-backdrop-default {
@@ -2915,7 +2915,8 @@ textarea:focus-visible {
 .guns-backdrop-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, transparent 35%, rgba(4, 5, 8, 0.85) 100%);
+  background: radial-gradient(circle at center, transparent 40%, rgba(4, 5, 8, 0.75) 100%);
+  pointer-events: none;
 }
 
 .guns-backdrop-grain {
@@ -3274,7 +3275,7 @@ textarea:focus-visible {
   position: relative;
   width: min(100%, 460px);
   border-radius: 26px;
-  background: rgba(14, 16, 24, 0.68);
+  background: var(--card-surface-rgba, rgba(14, 16, 24, 0.68));
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -4935,12 +4936,56 @@ textarea:focus-visible {
   gap: 3px;
 }
 
+.stat-number-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .stat-number {
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.04em;
   color: #ffffff;
   font-family: var(--mono);
+}
+
+.studio-btn-tiny-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(120, 167, 255, 0.12);
+  border: 1px solid rgba(120, 167, 255, 0.25);
+  color: #78a7ff;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.studio-btn-tiny-edit:hover {
+  background: rgba(120, 167, 255, 0.24);
+  border-color: rgba(120, 167, 255, 0.5);
+  color: #ffffff;
+}
+
+.stat-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.stat-edit-input {
+  width: 90px !important;
+  padding: 4px 8px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  height: 28px !important;
 }
 
 .stat-title-highlight {
@@ -5818,7 +5863,7 @@ textarea:focus-visible {
   width: 100%;
   padding: 30px 24px;
   border-radius: 20px;
-  background: rgba(18, 20, 28, 0.72);
+  background: var(--card-surface-rgba, rgba(18, 20, 28, 0.72));
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
@@ -5837,6 +5882,87 @@ textarea:focus-visible {
   font-size: 11px;
   color: #64748b;
 }
+
+.simulator-backdrop-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.simulator-backdrop-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.studio-opacity-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: rgba(8, 10, 16, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 10px;
+}
+
+.opacity-controls-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.analytics-view-mgmt-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(14, 18, 30, 0.7);
+  border: 1px solid rgba(120, 167, 255, 0.18);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  margin-top: 16px;
+}
+
+.analytics-mgmt-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.analytics-mgmt-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.analytics-mgmt-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.analytics-mgmt-input {
+  width: 140px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  font-family: var(--mono) !important;
+}
+
 
 /* --- Floating Sticky Cyber Action Bar --- */
 .studio-sticky-bar {
@@ -6146,7 +6272,7 @@ textarea:focus-visible {
 .simulator-main-card.border-fx-rgb_flow {
   border: 1.5px solid transparent !important;
   background: 
-    linear-gradient(rgba(14, 16, 24, 0.8), rgba(14, 16, 24, 0.8)) padding-box,
+    linear-gradient(var(--card-surface-rgba, rgba(14, 16, 24, 0.8)), var(--card-surface-rgba, rgba(14, 16, 24, 0.8))) padding-box,
     conic-gradient(from var(--rgb-angle), #ff3366, #ff9933, #ffff33, #33ff99, #33ccff, #9933ff, #ff3366) border-box !important;
   animation: rgbAngleSpin 4s linear infinite;
   box-shadow: 

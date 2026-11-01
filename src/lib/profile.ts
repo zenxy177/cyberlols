@@ -39,6 +39,8 @@ export type Profile = {
   avatar_url: string | null;
   background_url: string | null;
   background_video_url: string | null;
+  background_video_opacity: number;
+  card_opacity: number;
   discord_user_id: string | null;
   discord_username: string | null;
   discord_global_name: string | null;
@@ -75,6 +77,8 @@ export const EMPTY_PROFILE: Profile = {
   avatar_url: null,
   background_url: null,
   background_video_url: null,
+  background_video_opacity: 70,
+  card_opacity: 75,
   audio_url: null,
   audio_title: "Arka Plan Müziği",
   audio_artist: "",
@@ -102,6 +106,18 @@ export const EMPTY_PROFILE: Profile = {
   is_published: true,
 };
 
+export function clampNumber(
+  val: unknown,
+  fallback: number,
+  min = 0,
+  max = 100,
+): number {
+  if (val === null || val === undefined || val === "") return fallback;
+  const num = Number(val);
+  if (!Number.isFinite(num)) return fallback;
+  return Math.max(min, Math.min(max, Math.round(num)));
+}
+
 export function normalizeProfile(value: unknown): Profile {
   if (!value || typeof value !== "object") return EMPTY_PROFILE;
 
@@ -125,17 +141,33 @@ export function normalizeProfile(value: unknown): Profile {
         .slice(0, 10)
     : EMPTY_PROFILE.typewriter_lines;
 
-  const defaultVolumeRaw = Number(row.default_volume);
-  const default_volume =
-    Number.isFinite(defaultVolumeRaw) && defaultVolumeRaw >= 0 && defaultVolumeRaw <= 100
-      ? Math.round(defaultVolumeRaw)
-      : EMPTY_PROFILE.default_volume;
+  const default_volume = clampNumber(
+    row.default_volume,
+    EMPTY_PROFILE.default_volume,
+    0,
+    100,
+  );
 
-  const viewsCountRaw = Number(row.views_count);
-  const views_count =
-    Number.isFinite(viewsCountRaw) && viewsCountRaw >= 0
-      ? Math.round(viewsCountRaw)
-      : 0;
+  const views_count = clampNumber(
+    row.views_count,
+    0,
+    0,
+    Number.MAX_SAFE_INTEGER,
+  );
+
+  const background_video_opacity = clampNumber(
+    row.background_video_opacity,
+    EMPTY_PROFILE.background_video_opacity,
+    0,
+    100,
+  );
+
+  const card_opacity = clampNumber(
+    row.card_opacity,
+    EMPTY_PROFILE.card_opacity,
+    10,
+    100,
+  );
 
   return {
     ...EMPTY_PROFILE,
@@ -152,6 +184,8 @@ export function normalizeProfile(value: unknown): Profile {
       typeof row.background_video_url === "string"
         ? row.background_video_url
         : null,
+    background_video_opacity,
+    card_opacity,
     audio_url: typeof row.audio_url === "string" ? row.audio_url : null,
     audio_title:
       typeof row.audio_title === "string" && row.audio_title.trim()
@@ -274,3 +308,25 @@ export function isSupabaseConfigured(): boolean {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   );
 }
+
+export function hexToRgba(hex: string, alpha: number): string {
+  const safeAlpha = Math.max(0, Math.min(1, Number.isFinite(alpha) ? alpha : 0.75));
+  if (!hex || typeof hex !== "string") return `rgba(14, 16, 24, ${safeAlpha})`;
+  let clean = hex.replace("#", "").trim();
+  if (clean.length === 3) {
+    clean = clean
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+  if (clean.length === 6 || clean.length === 8) {
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    if (!Number.isNaN(r) && !Number.isNaN(g) && !Number.isNaN(b)) {
+      return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
+    }
+  }
+  return `rgba(14, 16, 24, ${safeAlpha})`;
+}
+

@@ -22,20 +22,56 @@ export function ViewsCounter({ initialCount }: ViewsCounterProps) {
   const hasFired = useRef(false);
 
   useEffect(() => {
+    setCount(initialCount);
+  }, [initialCount]);
+
+  useEffect(() => {
     // Prevent React StrictMode double execution in single render
     if (hasFired.current) return;
     hasFired.current = true;
 
-    // Check last viewed timestamp (throttle to once per 10 seconds per tab/browser to allow testing)
-    const viewedKey = "bio_last_viewed_at";
-    const lastViewedAt = typeof window !== "undefined" ? sessionStorage.getItem(viewedKey) : null;
+    if (typeof window === "undefined") return;
+
+    // Clean up legacy session key if present
+    try {
+      sessionStorage.removeItem("bio_last_viewed_at");
+    } catch {}
+
+    const STORAGE_KEY = "cyber_last_view_timestamp_main";
+    const COOKIE_NAME = "cyber_last_view_timestamp_main";
+    const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+
+    let lastViewedAt: string | null = null;
+    try {
+      lastViewedAt = localStorage.getItem(STORAGE_KEY);
+    } catch {}
+
+    if (!lastViewedAt && typeof document !== "undefined") {
+      try {
+        const match = document.cookie.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]*)`));
+        if (match) {
+          lastViewedAt = decodeURIComponent(match[1]);
+        }
+      } catch {}
+    }
+
     const now = Date.now();
-    if (lastViewedAt && now - Number(lastViewedAt) < 10000) {
+    const lastViewedNum = Number(lastViewedAt);
+    if (
+      Number.isFinite(lastViewedNum) &&
+      now - lastViewedNum < TWENTY_FOUR_HOURS_MS &&
+      now >= lastViewedNum
+    ) {
+      // Already counted as a unique visitor within the last 24 hours.
       return;
     }
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem(viewedKey, String(now));
-    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY, String(now));
+    } catch {}
+    try {
+      document.cookie = `${COOKIE_NAME}=${now}; max-age=${24 * 60 * 60}; path=/; SameSite=Lax`;
+    } catch {}
 
     fetch("/api/views", {
       method: "POST",

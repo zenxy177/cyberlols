@@ -40,6 +40,8 @@ import {
   type ChangeEvent,
 } from "react";
 import {
+  clampNumber,
+  hexToRgba,
   normalizeProfile,
   type CardBorderEffect,
   type CursorStyle,
@@ -304,6 +306,71 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
 
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+
+  const [editingViews, setEditingViews] = useState(false);
+  const [viewsInputVal, setViewsInputVal] = useState<string>(String(initial.views_count));
+  const [savingViews, setSavingViews] = useState(false);
+
+  useEffect(() => {
+    if (!editingViews) {
+      setViewsInputVal(String(form.views_count));
+    }
+  }, [form.views_count, editingViews]);
+
+  async function handleUpdateViews(newCount: number) {
+    if (newCount < 0 || !Number.isFinite(newCount)) return;
+    setSavingViews(true);
+    setEditorState({ kind: "saving", message: "Görüntülenme sayısı güncelleniyor…" });
+
+    try {
+      let succeeded = false;
+      let errorMsg = "Sayaç güncellenemedi";
+
+      const res = await fetch("/api/views", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ views_count: newCount }),
+      });
+
+      if (res.ok) {
+        succeeded = true;
+      } else {
+        const errJson = await res.json().catch(() => null);
+        if (errJson?.error) errorMsg = errJson.error;
+
+        const supabase = createBrowserSupabase();
+        const { error } = await supabase
+          .from("profiles")
+          .update({ views_count: newCount, updated_at: new Date().toISOString() })
+          .eq("id", "main");
+        if (!error) {
+          succeeded = true;
+        } else {
+          errorMsg = error.message || errorMsg;
+        }
+      }
+
+      if (!succeeded) {
+        throw new Error(errorMsg);
+      }
+
+      setForm((prev) => ({ ...prev, views_count: newCount }));
+      setOriginalForm((prev) => ({ ...prev, views_count: newCount }));
+      setAnalyticsData((prev) => (prev ? { ...prev, totalViews: newCount } : null));
+      setViewsInputVal(String(newCount));
+      setEditingViews(false);
+      setEditorState({
+        kind: "success",
+        message: `Görüntülenme sayısı başarıyla ${newCount.toLocaleString()} olarak güncellendi.`,
+      });
+      router.refresh();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Sayaç güncellenemedi";
+      setEditorState({ kind: "error", message: `Hata: ${msg}` });
+    } finally {
+      setSavingViews(false);
+    }
+  }
 
   const hasUnsavedChanges = JSON.stringify(form) !== JSON.stringify(originalForm);
 
@@ -661,7 +728,9 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         .map((l) => l.trim())
         .filter((l) => l.length > 0);
 
-      const safeVolume = Math.max(0, Math.min(100, Math.round(Number(form.default_volume) || 50)));
+      const safeVolume = clampNumber(form.default_volume, 50, 0, 100);
+      const safeBgVideoOpacity = clampNumber(form.background_video_opacity, 70, 0, 100);
+      const safeCardOpacity = clampNumber(form.card_opacity, 75, 10, 100);
 
       // Omit views_count to avoid resetting counter
       const formWithoutViews: Record<string, unknown> = { ...form };
@@ -669,6 +738,8 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
 
       const fullPayload = {
         ...formWithoutViews,
+        background_video_opacity: safeBgVideoOpacity,
+        card_opacity: safeCardOpacity,
         display_name: form.display_name.trim(),
         headline: form.headline.trim(),
         bio: form.bio.trim(),
@@ -758,6 +829,8 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         ...form,
         links,
         default_volume: safeVolume,
+        background_video_opacity: safeBgVideoOpacity,
+        card_opacity: safeCardOpacity,
         typewriter_lines:
           cleanTypewriterLines.length > 0
             ? cleanTypewriterLines
@@ -803,6 +876,8 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
   function copyMigrationSql() {
     const sql = `alter table public.profiles
   add column if not exists background_video_url text,
+  add column if not exists background_video_opacity integer not null default 70,
+  add column if not exists card_opacity integer not null default 75,
   add column if not exists audio_url text,
   add column if not exists audio_title text not null default 'Arka Plan Müziği',
   add column if not exists audio_artist text not null default '',
@@ -851,6 +926,25 @@ as $$
 $$;
 
 grant execute on function public.increment_profile_views(text) to anon, authenticated;
+
+create or replace function public.set_profile_views(new_count bigint, profile_slug text default 'main')
+returns bigint
+language plpgsql
+security definer
+as $$
+begin
+  if not (select public.is_site_admin()) then
+    raise exception 'Unauthorized';
+  end if;
+
+  update public.profiles
+  set views_count = greatest(0, new_count)
+  where id = profile_slug;
+  return greatest(0, new_count);
+end;
+$$;
+
+grant execute on function public.set_profile_views(bigint, text) to authenticated;
 
 notify pgrst, 'reload schema';`;
 
@@ -906,8 +1000,80 @@ notify pgrst, 'reload schema';`;
             <div className="stat-pulse-beacon" />
           </div>
           <div className="stat-card-body">
-            <span className="stat-number">{form.views_count.toLocaleString()}</span>
-            <span className="stat-subtext">gerçek zamanlı tekil sayaç</span>
+            {editingViews ? (
+              <div className="stat-edit-row">
+                <input
+                  type="number"
+                  min={0}
+                  value={viewsInputVal}
+                  onChange={(e) => setViewsInputVal(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleUpdateViews(Math.max(0, parseInt(viewsInputVal, 10) || 0));
+                    } else if (e.key === "Escape") {
+                      setEditingViews(false);
+                      setViewsInputVal(String(form.views_count));
+                    }
+                  }}
+                  className="cyber-input stat-edit-input"
+                  placeholder="Sayı"
+                  disabled={savingViews}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleUpdateViews(Math.max(0, parseInt(viewsInputVal, 10) || 0))
+                  }
+                  disabled={savingViews}
+                  className="studio-btn studio-btn-sm studio-btn-primary"
+                  title="Sayacı Kaydet"
+                >
+                  {savingViews ? <LoaderCircle size={12} className="spin" /> : <Check size={12} />}
+                  <span>Kaydet</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateViews(0)}
+                  disabled={savingViews}
+                  className="studio-btn studio-btn-sm studio-btn-ghost danger"
+                  title="Sayacı 0 Yap"
+                >
+                  <span>Sıfırla</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingViews(false);
+                    setViewsInputVal(String(form.views_count));
+                  }}
+                  disabled={savingViews}
+                  className="studio-btn studio-btn-sm studio-btn-ghost"
+                  title="İptal"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="stat-number-row">
+                  <span className="stat-number">{form.views_count.toLocaleString()}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewsInputVal(String(form.views_count));
+                      setEditingViews(true);
+                    }}
+                    className="studio-btn-tiny-edit"
+                    title="Görüntülenme sayısını manuel düzelt veya sıfırla"
+                  >
+                    <span>Düzenle</span>
+                  </button>
+                </div>
+                <span className="stat-subtext">24 saat tekil sayaç</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -1318,6 +1484,72 @@ notify pgrst, 'reload schema';`;
                             Kaldır
                           </button>
                         ) : null}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Opaklık & Görünürlük Kontrolleri */}
+                <div className="studio-opacity-section">
+                  <div className="section-title-wrap">
+                    <h4>Opaklık & Görünürlük Kontrolleri</h4>
+                    <span className="field-hint">
+                      Arka plan videosunun netliği ve merkezdeki profil kartının cam saydamlığı
+                    </span>
+                  </div>
+
+                  <div className="opacity-controls-grid">
+                    {/* Background Video Opacity */}
+                    <div className="cyber-field full-width">
+                      <div className="cyber-field-header">
+                        <label className="cyber-label">
+                          <span>Arka Plan Video Opaklığı (%{form.background_video_opacity ?? 70})</span>
+                          <span className="field-hint">
+                            Arka plan videosunun görünürlük ve parlaklık seviyesi. Video soluk veya karanlıksa artırabilirsiniz.
+                          </span>
+                        </label>
+                      </div>
+                      <div className="volume-slider-wrap">
+                        <input
+                          type="range"
+                          min={10}
+                          max={100}
+                          step={5}
+                          value={form.background_video_opacity ?? 70}
+                          onChange={(e) =>
+                            update("background_video_opacity", Number(e.target.value))
+                          }
+                          className="cyber-range"
+                        />
+                        <span className="volume-value-badge">
+                          %{form.background_video_opacity ?? 70}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Center Card Opacity */}
+                    <div className="cyber-field full-width mt-2">
+                      <div className="cyber-field-header">
+                        <label className="cyber-label">
+                          <span>Profil Kartı Opaklığı (%{form.card_opacity ?? 75})</span>
+                          <span className="field-hint">
+                            Merkezdeki profil kartının buzlu cam zemin saydamlığı. Düşürerek arkadaki videoyu daha çok gösterebilirsiniz.
+                          </span>
+                        </label>
+                      </div>
+                      <div className="volume-slider-wrap">
+                        <input
+                          type="range"
+                          min={10}
+                          max={100}
+                          step={5}
+                          value={form.card_opacity ?? 75}
+                          onChange={(e) => update("card_opacity", Number(e.target.value))}
+                          className="cyber-range"
+                        />
+                        <span className="volume-value-badge">
+                          %{form.card_opacity ?? 75}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -2087,6 +2319,58 @@ notify pgrst, 'reload schema';`;
                   </div>
                 </div>
 
+                {/* Dedicated Counter Management Card */}
+                <div className="analytics-view-mgmt-card">
+                  <div className="analytics-mgmt-header">
+                    <TrendingUp size={16} />
+                    <h4>Görüntülenme Sayacını Yönet (Hatalı / Test Sayısını Düzelt)</h4>
+                  </div>
+                  <p className="field-hint">
+                    Test esnasında veya hatalı girişlerde şişen görüntülenme sayısını (örn. 42 vb.) buradan istediğiniz gerçek sayıya ayarlayabilir veya tek tıkla sıfırlayabilirsiniz.
+                  </p>
+                  <div className="analytics-mgmt-actions">
+                    <input
+                      type="number"
+                      min={0}
+                      value={viewsInputVal}
+                      onChange={(e) => setViewsInputVal(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleUpdateViews(Math.max(0, parseInt(viewsInputVal, 10) || 0));
+                        }
+                      }}
+                      className="cyber-input analytics-mgmt-input"
+                      placeholder="Yeni sayaç sayısı"
+                      disabled={savingViews}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleUpdateViews(Math.max(0, parseInt(viewsInputVal, 10) || 0))
+                      }
+                      disabled={savingViews}
+                      className="studio-btn studio-btn-primary"
+                    >
+                      {savingViews ? (
+                        <LoaderCircle size={14} className="spin" />
+                      ) : (
+                        <Check size={14} />
+                      )}
+                      <span>Sayacı Güncelle</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateViews(0)}
+                      disabled={savingViews}
+                      className="studio-btn studio-btn-ghost danger"
+                    >
+                      <Trash2 size={14} />
+                      <span>Sayacı Sıfırla (0)</span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Last 7 Days Interactive Bar Chart */}
                 <div className="analytics-chart-container">
                   <div className="chart-header">
@@ -2261,12 +2545,44 @@ notify pgrst, 'reload schema';`;
                 ["--surface" as string]: form.surface_color,
               }}
             >
+              {form.background_video_url ? (
+                <video
+                  src={form.background_video_url}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="simulator-backdrop-video"
+                  style={{
+                    opacity: (form.background_video_opacity ?? 70) / 100,
+                  }}
+                />
+              ) : form.background_url ? (
+                <div
+                  className="simulator-backdrop-image"
+                  style={{
+                    backgroundImage: `url("${form.background_url}")`,
+                    opacity: (form.background_video_opacity ?? 70) / 100,
+                  }}
+                />
+              ) : null}
+
               {/* Simulated Card */}
               <div className="simulator-card-wrapper">
                 <div
                   className={`guns-main-card simulator-main-card ${
                     form.enable_lunar_effects ? "has-lunar-aura" : ""
                   } border-fx-${form.card_border_effect || "lunar_aurora"}`}
+                  style={(() => {
+                    const cardBg = hexToRgba(
+                      form.surface_color,
+                      (form.card_opacity ?? 75) / 100,
+                    );
+                    return {
+                      backgroundColor: cardBg,
+                      ["--card-surface-rgba" as string]: cardBg,
+                    };
+                  })()}
                 >
                   {/* Avatar */}
                   <div className="guns-card-avatar-wrap">

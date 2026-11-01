@@ -50,6 +50,16 @@ function writeLocalLogs(logs: ViewLogEntry[]) {
   }
 }
 
+export function clearAnalyticsLogs() {
+  try {
+    if (fs.existsSync(LOG_FILE_PATH)) {
+      fs.writeFileSync(LOG_FILE_PATH, "[]", "utf-8");
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export function parseUserAgent(ua: string | null): {
   device: "desktop" | "mobile" | "tablet";
   browser: string;
@@ -148,10 +158,22 @@ export async function recordRealVisit(headers: Headers): Promise<ViewLogEntry> {
 
 export async function getRealAnalytics() {
   let logs: ViewLogEntry[] = [];
+  let dbViewsCount: number | null = null;
 
   // Try Supabase first
   try {
     const supabase = await createServerSupabase();
+
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("views_count")
+      .eq("id", "main")
+      .maybeSingle();
+
+    if (prof && typeof prof.views_count === "number") {
+      dbViewsCount = prof.views_count;
+    }
+
     const { data, error } = await supabase
       .from("profile_views_log")
       .select("*")
@@ -180,7 +202,7 @@ export async function getRealAnalytics() {
     logs = readLocalLogs();
   }
 
-  const totalViews = logs.length;
+  const totalViews = dbViewsCount !== null ? dbViewsCount : logs.length;
 
   // Day names in Turkish
   const dayNames = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];

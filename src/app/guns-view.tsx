@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { Profile } from "@/lib/profile";
+import { hexToRgba, type Profile } from "@/lib/profile";
 import { ClickToEnter } from "@/app/click-to-enter";
 import { AudioPlayer } from "@/app/audio-player";
 import { ProfileCard } from "@/app/profile-card";
@@ -50,6 +50,11 @@ export function GunsView({
     profile.audio_title?.trim() ||
     (hasVideoAudio ? "Video Sesi" : "Arka Plan Müziği");
 
+  const cardBg = hexToRgba(
+    profile.surface_color,
+    (profile.card_opacity ?? 75) / 100
+  );
+
   return (
     <>
       {/* Custom Cursor with dynamic styles, trails & click ripples */}
@@ -82,6 +87,9 @@ export function GunsView({
           <video
             ref={videoRef}
             className="guns-backdrop-video"
+            style={{
+              opacity: (profile.background_video_opacity ?? 70) / 100,
+            }}
             autoPlay
             loop
             muted={!entered || hasExplicitAudio}
@@ -92,7 +100,10 @@ export function GunsView({
         ) : backgroundUrl ? (
           <div
             className="guns-backdrop-image"
-            style={{ backgroundImage: `url("${backgroundUrl}")` }}
+            style={{
+              backgroundImage: `url("${backgroundUrl}")`,
+              opacity: (profile.background_video_opacity ?? 70) / 100,
+            }}
           />
         ) : (
           <div className="guns-backdrop-default" />
@@ -134,8 +145,12 @@ export function GunsView({
           <ProfileCard
             enableTilt={profile.enable_tilt}
             className={`guns-main-card${profile.enable_lunar_effects ? " has-lunar-aura" : ""} border-fx-${profile.card_border_effect || "lunar_aurora"}`}
+            style={{
+              backgroundColor: cardBg,
+              ["--card-surface-rgba" as string]: cardBg,
+            }}
           >
-            {/* Card Header: Avatar & Glow */}
+                {/* Card Header: Avatar & Glow */}
             <div className="guns-card-avatar-wrap">
               <div className="guns-card-avatar-glow" aria-hidden="true" />
               {profile.enable_lunar_effects ? (

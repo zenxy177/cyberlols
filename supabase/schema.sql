@@ -31,6 +31,8 @@ create table if not exists public.profiles (
   avatar_url text,
   background_url text,
   background_video_url text,
+  background_video_opacity integer not null default 70 check (background_video_opacity >= 0 and background_video_opacity <= 100),
+  card_opacity integer not null default 75 check (card_opacity >= 10 and card_opacity <= 100),
   audio_url text,
   audio_title text not null default 'Arka Plan Müziği',
   audio_artist text not null default '',
@@ -60,6 +62,8 @@ alter table public.profiles
 
 alter table public.profiles
   add column if not exists background_video_url text,
+  add column if not exists background_video_opacity integer not null default 70,
+  add column if not exists card_opacity integer not null default 75,
   add column if not exists audio_url text,
   add column if not exists audio_title text not null default 'Arka Plan Müziği',
   add column if not exists audio_artist text not null default '',
@@ -131,7 +135,7 @@ create trigger set_profile_updated_at
   before update on public.profiles
   for each row execute function public.set_profile_updated_at();
 
-create or replace function public.increment_profile_views(profile_id text default 'main')
+create or replace function public.increment_profile_views(profile_slug text default 'main')
 returns bigint
 language plpgsql
 security definer
@@ -159,6 +163,28 @@ $$;
 
 revoke all on function public.increment_profile_views(text) from public;
 grant execute on function public.increment_profile_views(text) to anon, authenticated;
+
+create or replace function public.set_profile_views(new_count bigint, profile_slug text default 'main')
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not (select public.is_site_admin()) then
+    raise exception 'Unauthorized: Only site admin can set profile views';
+  end if;
+
+  update public.profiles
+  set views_count = greatest(0, new_count)
+  where id = profile_slug;
+  return greatest(0, new_count);
+end;
+$$;
+
+revoke all on function public.set_profile_views(bigint, text) from public;
+grant execute on function public.set_profile_views(bigint, text) to authenticated;
+
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
