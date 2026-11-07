@@ -3566,6 +3566,7 @@ textarea:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .guns-discord-activity.is-spotify {
@@ -3576,6 +3577,36 @@ textarea:focus-visible {
   color: #91adff;
 }
 
+.guns-discord-game-pill-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.4);
+}
+
+.guns-discord-game-pill-vector {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1px solid currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.guns-discord-activity-time {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #7983f5;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
 .guns-discord-activity-icon {
   flex-shrink: 0;
 }
@@ -3583,6 +3614,7 @@ textarea:focus-visible {
 .guns-discord-activity-text {
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .guns-discord-status-text {
@@ -4292,6 +4324,304 @@ textarea:focus-visible {
   font-family: var(--mono);
   font-size: 9px;
   color: #8a94a6;
+}
+
+/* guns.lol Rich Game Activity Card (Moon Knight / Cyber Aesthetic) */
+.guns-game-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(16, 18, 27, 0.78);
+  border: 1px solid var(--game-border, rgba(99, 102, 241, 0.35));
+  border-radius: 12px;
+  backdrop-filter: blur(14px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.guns-game-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--game-color, #6366f1) 0%, var(--game-accent, #00f2fe) 60%, rgba(99, 102, 241, 0.2) 100%);
+  opacity: 0.9;
+}
+
+.guns-game-card:hover {
+  background: rgba(20, 24, 38, 0.9);
+  border-color: var(--game-color, rgba(99, 102, 241, 0.6));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--game-glow, rgba(99, 102, 241, 0.25)), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.guns-game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.guns-game-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--game-color, #818cf8);
+  text-transform: uppercase;
+}
+
+.guns-game-label-icon {
+  color: var(--game-color, #818cf8);
+  flex-shrink: 0;
+}
+
+.guns-game-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(0, 242, 254, 0.08);
+  border: 1px solid rgba(0, 242, 254, 0.25);
+}
+
+.guns-game-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00f2fe;
+  box-shadow: 0 0 8px #00f2fe;
+  animation: gunsGameLivePulse 1.6s ease-in-out infinite;
+}
+
+@keyframes gunsGameLivePulse {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.7;
+    box-shadow: 0 0 4px #00f2fe;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+    box-shadow: 0 0 10px #00f2fe;
+  }
+}
+
+.guns-game-live-text {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #00f2fe;
+  text-transform: uppercase;
+}
+
+.guns-game-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.guns-game-art-wrap {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.guns-game-art-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #141724;
+}
+
+.guns-game-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.guns-game-art-branded {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.5);
+}
+
+.guns-game-branded-glow {
+  position: absolute;
+  inset: -8px;
+  opacity: 0.35;
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.guns-game-branded-logo {
+  z-index: 1;
+  filter: drop-shadow(0 2px 8px var(--game-glow, rgba(255, 255, 255, 0.35)));
+}
+
+.guns-game-branded-title {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  z-index: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.8));
+}
+
+.guns-game-art-fallback {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.25) 0%, rgba(0, 242, 254, 0.15) 100%);
+  border: 1px solid rgba(88, 101, 242, 0.35);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.guns-game-fallback-glow {
+  position: absolute;
+  inset: -10px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.guns-game-fallback-icon {
+  color: #a5b4fc;
+  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.6));
+  z-index: 1;
+}
+
+.guns-game-fallback-letter {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  color: #e0e7ff;
+  letter-spacing: 0.05em;
+  z-index: 1;
+}
+
+.guns-game-small-art {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #10121b;
+  background: #141724;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  z-index: 2;
+}
+
+.guns-game-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.guns-game-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+
+.guns-game-details {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #cfd7e6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.guns-game-state {
+  font-size: 10.5px;
+  color: #8a94a6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.guns-game-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.guns-game-timer-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #8a94a6;
+}
+
+.guns-game-timer-icon {
+  color: var(--game-color, #818cf8);
+  flex-shrink: 0;
+}
+
+.guns-game-elapsed-time {
+  font-weight: 700;
+  color: var(--game-color, #a5b4fc);
+}
+
+.guns-game-elapsed-human {
+  color: #64748b;
+  font-size: 9.5px;
+}
+
+.guns-game-timer-row.is-remaining .guns-game-timer-icon {
+  color: #00f2fe;
+}
+
+.guns-game-timer-row.is-remaining .guns-game-elapsed-time {
+  color: #38bdf8;
 }
 
 
