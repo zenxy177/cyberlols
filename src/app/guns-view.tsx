@@ -214,6 +214,8 @@ export function GunsView({
                   fallbackUsername={profile.discord_username}
                   fallbackGlobalName={profile.discord_global_name}
                   fallbackAvatarUrl={profile.discord_avatar_url}
+                  customBadges={profile.discord_badges}
+                  badgeMode={profile.discord_badges_mode}
                 />
               </div>
             ) : null}

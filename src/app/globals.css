@@ -3536,11 +3536,10 @@ textarea:focus-visible {
 
 .guns-discord-name-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  position: relative;
 }
 
 .guns-discord-display-name {
@@ -3549,6 +3548,7 @@ textarea:focus-visible {
   color: #ffffff;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .guns-discord-username {
@@ -3556,6 +3556,7 @@ textarea:focus-visible {
   color: #8b95a8;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .guns-discord-activity {
@@ -3633,6 +3634,400 @@ textarea:focus-visible {
 .guns-discord-badge:hover .guns-discord-arrow {
   color: #ffffff;
   transform: translate(2px, -2px);
+}
+
+/* Discord Badges Showcase (guns.lol Aesthetic) */
+.guns-discord-badges-row {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+  gap: 4px;
+  padding: 2px 5px;
+  background: rgba(10, 14, 23, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 6px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+  vertical-align: middle;
+  position: relative;
+  z-index: 10;
+}
+
+.guns-discord-badge-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.22s ease;
+}
+
+.guns-discord-badge-item:hover,
+.guns-discord-badge-item.is-active,
+.guns-discord-badge-item:focus-visible {
+  transform: scale(1.18);
+  filter: drop-shadow(0 0 6px var(--badge-glow, rgba(88, 101, 242, 0.6)));
+  z-index: 50;
+}
+
+.guns-discord-badge-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 0;
+}
+
+.guns-discord-badge-icon-wrap svg {
+  display: block;
+  overflow: visible;
+  transition: filter 0.2s ease;
+}
+
+/* Tooltip (guns.lol floating card) */
+.guns-discord-badge-tooltip {
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(14, 18, 28, 0.96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 6px 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7), 0 0 14px var(--badge-glow, rgba(88, 101, 242, 0.3));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: normal;
+  width: max-content;
+  max-width: min(220px, 75vw);
+  z-index: 1000;
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.18s;
+  text-align: left;
+}
+
+.guns-discord-badge-item:hover .guns-discord-badge-tooltip,
+.guns-discord-badge-item.is-active .guns-discord-badge-tooltip,
+.guns-discord-badge-item:focus-visible .guns-discord-badge-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Edge alignment so tooltips never clip at card boundaries */
+.guns-discord-badge-item:first-child:not(:only-child) .guns-discord-badge-tooltip {
+  left: -2px;
+  transform: translateX(0) translateY(4px);
+}
+
+.guns-discord-badge-item:first-child:not(:only-child):hover .guns-discord-badge-tooltip,
+.guns-discord-badge-item:first-child:not(:only-child).is-active .guns-discord-badge-tooltip,
+.guns-discord-badge-item:first-child:not(:only-child):focus-visible .guns-discord-badge-tooltip {
+  transform: translateX(0) translateY(0);
+}
+
+.guns-discord-badge-item:first-child:not(:only-child) .guns-discord-badge-tooltip-arrow {
+  left: 10px;
+  transform: none;
+}
+
+.guns-discord-badge-item:last-child:not(:only-child) .guns-discord-badge-tooltip {
+  left: auto;
+  right: -2px;
+  transform: translateX(0) translateY(4px);
+}
+
+.guns-discord-badge-item:last-child:not(:only-child):hover .guns-discord-badge-tooltip,
+.guns-discord-badge-item:last-child:not(:only-child).is-active .guns-discord-badge-tooltip,
+.guns-discord-badge-item:last-child:not(:only-child):focus-visible .guns-discord-badge-tooltip {
+  transform: translateX(0) translateY(0);
+}
+
+.guns-discord-badge-item:last-child:not(:only-child) .guns-discord-badge-tooltip-arrow {
+  left: auto;
+  right: 10px;
+  transform: none;
+}
+
+.guns-discord-badge-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.guns-discord-badge-tooltip-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.guns-discord-badge-tooltip-desc {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 2px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.guns-discord-badge-tooltip-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(14, 18, 28, 0.96);
+}
+
+/* Discord Badges Studio Admin Card */
+.discord-badges-studio-card {
+  padding: 18px;
+  border-radius: 14px;
+  background: rgba(14, 18, 28, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.discord-badges-studio-header h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.discord-badges-studio-header p {
+  font-size: 12px;
+  color: #8b95a8;
+  margin-top: 3px;
+}
+
+/* Discord Mode Selection Grid */
+.discord-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.discord-mode-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(20, 24, 38, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: inherit;
+}
+
+.discord-mode-card:hover {
+  background: rgba(26, 32, 50, 0.8);
+  border-color: rgba(88, 101, 242, 0.4);
+}
+
+.discord-mode-card.is-active {
+  background: rgba(88, 101, 242, 0.12);
+  border-color: #5865f2;
+  box-shadow: 0 0 14px rgba(88, 101, 242, 0.2);
+}
+
+.discord-mode-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+
+.discord-mode-card.is-active .discord-mode-radio {
+  border-color: #5865f2;
+}
+
+.discord-mode-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.discord-mode-card.is-active .discord-mode-dot {
+  background: #5865f2;
+}
+
+.discord-mode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.discord-mode-info strong {
+  font-size: 12px;
+  color: #f1f4fb;
+  font-weight: 600;
+}
+
+.discord-mode-info span {
+  font-size: 11px;
+  color: #8b95a8;
+  line-height: 1.35;
+}
+
+/* Lanyard Detected Box */
+.lanyard-detected-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.lanyard-detected-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #4ade80;
+}
+
+.lanyard-detected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lanyard-detected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 11px;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.lanyard-detected-empty {
+  font-size: 11px;
+  color: #8b95a8;
+  font-style: italic;
+}
+
+/* Discord Badges Picker Grid */
+.discord-badges-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.discord-badge-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(18, 22, 33, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  color: inherit;
+}
+
+.discord-badge-picker-item:hover {
+  background: rgba(26, 31, 48, 0.85);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.discord-badge-picker-item.is-selected {
+  background: rgba(88, 101, 242, 0.14);
+  border-color: var(--badge-color, #5865f2);
+  box-shadow: 0 0 12px var(--badge-glow, rgba(88, 101, 242, 0.25));
+}
+
+.discord-badge-picker-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.discord-badge-picker-item.is-selected .discord-badge-picker-icon {
+  border-color: var(--badge-color, #5865f2);
+  transform: scale(1.08);
+}
+
+.discord-badge-picker-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.discord-badge-picker-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f4fb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.discord-badge-picker-desc {
+  font-size: 10px;
+  color: #8b95a8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.discord-badge-picker-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.discord-badge-picker-item.is-selected .discord-badge-picker-check {
+  background: var(--badge-color, #5865f2);
+  border-color: var(--badge-color, #5865f2);
 }
 
 /* Social Badges Grid */

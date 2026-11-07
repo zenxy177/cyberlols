@@ -2,12 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Clock, Gamepad2, Headphones, Timer } from "lucide-react";
+import {
+  DiscordBadgeItem,
+  type DiscordBadgeMode,
+  resolveDiscordBadges,
+} from "@/lib/discord-badges";
 
 type DiscordPresenceProps = {
   discordUserId: string;
   fallbackUsername?: string | null;
   fallbackGlobalName?: string | null;
   fallbackAvatarUrl?: string | null;
+  customBadges?: string[] | null;
+  badgeMode?: DiscordBadgeMode;
 };
 
 export type LanyardSpotify = {
@@ -47,6 +54,10 @@ export type LanyardData = {
     username: string;
     avatar: string | null;
     global_name: string | null;
+    discriminator?: string;
+    public_flags?: number;
+    flags?: number;
+    premium_type?: number;
   };
   discord_status: "online" | "idle" | "dnd" | "offline";
   activities: LanyardActivity[];
@@ -748,6 +759,8 @@ export function DiscordPresence({
   fallbackUsername,
   fallbackGlobalName,
   fallbackAvatarUrl,
+  customBadges,
+  badgeMode = "auto",
 }: DiscordPresenceProps) {
   const [data, setData] = useState<LanyardData | null>(null);
 
@@ -845,6 +858,15 @@ export function DiscordPresence({
       }?size=128`
     : fallbackAvatarUrl;
 
+  // Resolve Discord Badges (Lanyard public_flags + Nitro + custom settings)
+  const badges = resolveDiscordBadges({
+    publicFlags: data?.discord_user?.public_flags ?? data?.discord_user?.flags,
+    avatar: data?.discord_user?.avatar,
+    premiumType: data?.discord_user?.premium_type,
+    customBadges,
+    badgeMode,
+  });
+
   // Check activity
   const spotify = data?.listening_to_spotify ? data.spotify : null;
   const gameActivity = findPrimaryGameActivity(data?.activities);
@@ -881,6 +903,24 @@ export function DiscordPresence({
           <div className="guns-discord-name-row">
             <span className="guns-discord-display-name">{displayName}</span>
             <span className="guns-discord-username">@{username}</span>
+            {badges.length > 0 ? (
+              <div
+                className="guns-discord-badges-row"
+                role="list"
+                aria-label="Discord Rozetleri"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                {badges.map((badge) => (
+                  <DiscordBadgeItem key={badge.id} badge={badge} />
+                ))}
+              </div>
+            ) : null}
           </div>
 
           {gameActivity ? (

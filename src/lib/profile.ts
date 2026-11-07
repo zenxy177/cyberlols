@@ -24,6 +24,8 @@ export type CursorTrail =
   | "stardust"
   | "ghost";
 
+export type DiscordBadgeMode = "auto" | "custom" | "both";
+
 export type ProfileLink = {
   id: string;
   label: string;
@@ -45,6 +47,8 @@ export type Profile = {
   discord_username: string | null;
   discord_global_name: string | null;
   discord_avatar_url: string | null;
+  discord_badges: string[];
+  discord_badges_mode: DiscordBadgeMode;
   accent_color: string;
   surface_color: string;
   audio_url: string | null;
@@ -100,6 +104,8 @@ export const EMPTY_PROFILE: Profile = {
   discord_username: null,
   discord_global_name: null,
   discord_avatar_url: null,
+  discord_badges: [],
+  discord_badges_mode: "auto",
   accent_color: "#78a7ff",
   surface_color: "#11131a",
   links: [],
@@ -259,6 +265,20 @@ export function normalizeProfile(value: unknown): Profile {
       typeof row.discord_avatar_url === "string"
         ? row.discord_avatar_url
         : null,
+    discord_badges: Array.isArray(row.discord_badges)
+      ? row.discord_badges
+          .filter(
+            (b): b is string =>
+              typeof b === "string" && b.trim().length > 0,
+          )
+          .slice(0, 20)
+      : [],
+    discord_badges_mode:
+      row.discord_badges_mode === "custom" ||
+      row.discord_badges_mode === "both" ||
+      row.discord_badges_mode === "auto"
+        ? (row.discord_badges_mode as DiscordBadgeMode)
+        : "auto",
     accent_color: isHexColor(row.accent_color)
       ? row.accent_color
       : EMPTY_PROFILE.accent_color,
