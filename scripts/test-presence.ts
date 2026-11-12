@@ -2,9 +2,13 @@ import assert from "node:assert";
 import {
   resolveActivityAssetUrl,
   getKnownGame,
+  getGameMonogram,
+  generateTrackWaveform,
+  KNOWN_GAMES,
   findPrimaryGameActivity,
   formatElapsed,
   formatElapsedHuman,
+  formatTime,
   type LanyardActivity,
 } from "../src/app/discord-presence";
 import {
@@ -127,9 +131,255 @@ assert.strictEqual(apex?.id, "apex");
 const steam = getKnownGame("Steam");
 assert.strictEqual(steam?.id, "steam");
 
-// Unknown game
-const unknown = getKnownGame("Random Indie Game 2026");
-assert.strictEqual(unknown, null);
+// Verify game library size (at least 50 popular games)
+assert.strictEqual(
+  KNOWN_GAMES.length >= 50,
+  true,
+  `Expected at least 50 known games, found ${KNOWN_GAMES.length}`,
+);
+
+// Verify structural validity of all games in KNOWN_GAMES
+const knownIds = new Set<string>();
+for (const g of KNOWN_GAMES) {
+  assert.ok(!knownIds.has(g.id), `Duplicate game ID: ${g.id}`);
+  knownIds.add(g.id);
+  assert.ok(g.matchNames && g.matchNames.length > 0, `Game ${g.id} has no matchNames`);
+  assert.ok(g.brandColor.startsWith("#"), `Game ${g.id} has invalid brandColor ${g.brandColor}`);
+  assert.ok(g.svgPath.length >= 10, `Game ${g.id} has invalid svgPath`);
+  assert.ok(g.shortName.length > 0, `Game ${g.id} has empty shortName`);
+  assert.ok(g.cardLabel.length > 0, `Game ${g.id} has empty cardLabel`);
+}
+
+// Call of Duty & Warzone
+const cod1 = getKnownGame("Call of Duty: Warzone");
+assert.strictEqual(cod1?.id, "call-of-duty");
+const cod2 = getKnownGame("cod");
+assert.strictEqual(cod2?.id, "call-of-duty");
+const cod3 = getKnownGame("Modern Warfare III");
+assert.strictEqual(cod3?.id, "call-of-duty");
+const cod4 = getKnownGame("Black Ops 6");
+assert.strictEqual(cod4?.id, "call-of-duty");
+
+// Rainbow Six Siege
+const r6ByName = getKnownGame("Tom Clancy's Rainbow Six Siege");
+assert.strictEqual(r6ByName?.id, "rainbow-six");
+const r6Short = getKnownGame("r6");
+assert.strictEqual(r6Short?.id, "rainbow-six");
+const r6Siege = getKnownGame("siege");
+assert.strictEqual(r6Siege?.id, "rainbow-six");
+const r6Token = getKnownGame("Tom Clancy's R6 Siege");
+assert.strictEqual(r6Token?.id, "rainbow-six");
+
+// Overwatch 2
+const ow2 = getKnownGame("Overwatch 2");
+assert.strictEqual(ow2?.id, "overwatch");
+const owShort = getKnownGame("ow2");
+assert.strictEqual(owShort?.id, "overwatch");
+
+// Rocket League
+const rl = getKnownGame("Rocket League");
+assert.strictEqual(rl?.id, "rocket-league");
+const rlShort = getKnownGame("rl");
+assert.strictEqual(rlShort?.id, "rocket-league");
+
+// Rust
+const rust = getKnownGame("Rust");
+assert.strictEqual(rust?.id, "rust");
+const rustDirectX = getKnownGame("Rust (DirectX 11)");
+assert.strictEqual(rustDirectX?.id, "rust");
+
+// EA SPORTS FC / FIFA
+const eafc = getKnownGame("EA SPORTS FC 24");
+assert.strictEqual(eafc?.id, "fc-fifa");
+const fc25 = getKnownGame("FC 25");
+assert.strictEqual(fc25?.id, "fc-fifa");
+const fifa = getKnownGame("FIFA 23");
+assert.strictEqual(fifa?.id, "fc-fifa");
+
+// Cyberpunk 2077
+const cp = getKnownGame("Cyberpunk 2077");
+assert.strictEqual(cp?.id, "cyberpunk");
+assert.strictEqual(cp?.brandColor, "#fcee0a");
+
+// Elden Ring
+const elden = getKnownGame("Elden Ring");
+assert.strictEqual(elden?.id, "elden-ring");
+const erDlc = getKnownGame("Shadow of the Erdtree");
+assert.strictEqual(erDlc?.id, "elden-ring");
+
+// Genshin Impact & Honkai: Star Rail
+const genshin = getKnownGame("Genshin Impact");
+assert.strictEqual(genshin?.id, "genshin");
+const hsr = getKnownGame("Honkai: Star Rail");
+assert.strictEqual(hsr?.id, "star-rail");
+const hsrShort = getKnownGame("HSR");
+assert.strictEqual(hsrShort?.id, "star-rail");
+
+// Dead by Daylight
+const dbd = getKnownGame("Dead by Daylight");
+assert.strictEqual(dbd?.id, "dbd");
+const dbdShort = getKnownGame("DBD");
+assert.strictEqual(dbdShort?.id, "dbd");
+
+// Brawlhalla & Terraria
+const bh = getKnownGame("Brawlhalla");
+assert.strictEqual(bh?.id, "brawlhalla");
+const terraria = getKnownGame("Terraria");
+assert.strictEqual(terraria?.id, "terraria");
+
+// Team Fortress 2 & Dota 2
+const tf2 = getKnownGame("Team Fortress 2");
+assert.strictEqual(tf2?.id, "tf2");
+const tf2Short = getKnownGame("TF2");
+assert.strictEqual(tf2Short?.id, "tf2");
+const dota = getKnownGame("Dota 2");
+assert.strictEqual(dota?.id, "dota-2");
+
+// Destiny 2 & Warframe
+const d2 = getKnownGame("Destiny 2");
+assert.strictEqual(d2?.id, "destiny-2");
+const wf = getKnownGame("Warframe");
+assert.strictEqual(wf?.id, "warframe");
+
+// PUBG & Palworld
+const pubg = getKnownGame("PUBG: BATTLEGROUNDS");
+assert.strictEqual(pubg?.id, "pubg");
+const palworld = getKnownGame("Palworld");
+assert.strictEqual(palworld?.id, "palworld");
+
+// Helldivers 2, Deadlock & The Finals
+const hd2 = getKnownGame("Helldivers 2");
+assert.strictEqual(hd2?.id, "helldivers-2");
+const deadlock = getKnownGame("Deadlock");
+assert.strictEqual(deadlock?.id, "deadlock");
+const theFinals = getKnownGame("THE FINALS");
+assert.strictEqual(theFinals?.id, "the-finals");
+
+// osu! & Geometry Dash
+const osu = getKnownGame("osu!");
+assert.strictEqual(osu?.id, "osu");
+const osuLazer = getKnownGame("osu! (lazer)");
+assert.strictEqual(osuLazer?.id, "osu");
+const gd = getKnownGame("Geometry Dash");
+assert.strictEqual(gd?.id, "geometry-dash");
+const gdShort = getKnownGame("GD");
+assert.strictEqual(gdShort?.id, "geometry-dash");
+
+// World of Warcraft & Diablo IV
+const wow = getKnownGame("World of Warcraft");
+assert.strictEqual(wow?.id, "world-of-warcraft");
+const wowShort = getKnownGame("WoW");
+assert.strictEqual(wowShort?.id, "world-of-warcraft");
+const diablo = getKnownGame("Diablo IV");
+assert.strictEqual(diablo?.id, "diablo");
+
+// Monster Hunter & Lethal Company
+const mh = getKnownGame("Monster Hunter: World");
+assert.strictEqual(mh?.id, "monster-hunter");
+const lethal = getKnownGame("Lethal Company");
+assert.strictEqual(lethal?.id, "lethal-company");
+
+// Among Us & Phasmophobia & Sea of Thieves
+const among = getKnownGame("Among Us");
+assert.strictEqual(among?.id, "among-us");
+const phasmo = getKnownGame("Phasmophobia");
+assert.strictEqual(phasmo?.id, "phasmophobia");
+const sot = getKnownGame("Sea of Thieves");
+assert.strictEqual(sot?.id, "sea-of-thieves");
+const sotShort = getKnownGame("sot");
+assert.strictEqual(sotShort?.id, "sea-of-thieves");
+
+// Fallout series & Baldur's Gate 3 & Tarkov & Witcher
+const fallout = getKnownGame("Fallout 4");
+assert.strictEqual(fallout?.id, "fallout");
+const bg3 = getKnownGame("Baldur's Gate 3");
+assert.strictEqual(bg3?.id, "baldurs-gate");
+const tarkov = getKnownGame("Escape from Tarkov");
+assert.strictEqual(tarkov?.id, "tarkov");
+const witcher = getKnownGame("The Witcher 3: Wild Hunt");
+assert.strictEqual(witcher?.id, "witcher");
+
+// Additional popular Discord games (RDR2, Hollow Knight, Stardew, GMod, ARK, Forza, ETS2, HOI4, Half-Life, Assetto Corsa)
+const rdr2 = getKnownGame("Red Dead Redemption 2");
+assert.strictEqual(rdr2?.id, "red-dead");
+const rdrShort = getKnownGame("rdr2");
+assert.strictEqual(rdrShort?.id, "red-dead");
+
+const hk = getKnownGame("Hollow Knight");
+assert.strictEqual(hk?.id, "hollow-knight");
+const silksong = getKnownGame("Silksong");
+assert.strictEqual(silksong?.id, "hollow-knight");
+
+const stardew = getKnownGame("Stardew Valley");
+assert.strictEqual(stardew?.id, "stardew-valley");
+
+const gmod = getKnownGame("Garry's Mod");
+assert.strictEqual(gmod?.id, "garrys-mod");
+const gmodShort = getKnownGame("gmod");
+assert.strictEqual(gmodShort?.id, "garrys-mod");
+
+const ark = getKnownGame("ARK: Survival Evolved");
+assert.strictEqual(ark?.id, "ark");
+
+const forza = getKnownGame("Forza Horizon 5");
+assert.strictEqual(forza?.id, "forza");
+
+const ets2 = getKnownGame("Euro Truck Simulator 2");
+assert.strictEqual(ets2?.id, "euro-truck");
+const etsShort = getKnownGame("ets2");
+assert.strictEqual(etsShort?.id, "euro-truck");
+
+const hoi4 = getKnownGame("Hearts of Iron IV");
+assert.strictEqual(hoi4?.id, "hearts-of-iron");
+const hoiShort = getKnownGame("hoi4");
+assert.strictEqual(hoiShort?.id, "hearts-of-iron");
+
+const hl2 = getKnownGame("Half-Life 2");
+assert.strictEqual(hl2?.id, "half-life");
+
+const acc = getKnownGame("Assetto Corsa Competizione");
+assert.strictEqual(acc?.id, "assetto-corsa");
+
+// Boundary protections: must NOT false-match on subwords!
+assert.strictEqual(getKnownGame("Trust"), null, "Trust should not match Rust");
+assert.strictEqual(getKnownGame("Trust No One"), null, "Trust No One should not match Rust");
+assert.strictEqual(getKnownGame("Steamer 3D"), null, "Steamer should not match Steam");
+assert.strictEqual(getKnownGame("Robloxian"), null, "Robloxian should not match Roblox");
+assert.strictEqual(getKnownGame("Dotard"), null, "Dotard should not match Dota");
+assert.strictEqual(getKnownGame("Apexify"), null, "Apexify should not match Apex");
+assert.strictEqual(getKnownGame("Discord"), null, "Discord should not match 'cod'");
+assert.strictEqual(getKnownGame("World Editor"), null, "World Editor should not match 'rl'");
+assert.strictEqual(getKnownGame("Random Indie Game 2026"), null);
+
+// Monogram generation (including Unicode international support)
+assert.strictEqual(getGameMonogram("Risk of Rain"), "RR");
+assert.strictEqual(getGameMonogram("Satisfactory"), "SA");
+assert.strictEqual(getGameMonogram("Hades"), "HA");
+assert.strictEqual(getGameMonogram("Factorio"), "FA");
+assert.strictEqual(getGameMonogram("X"), "X");
+assert.strictEqual(getGameMonogram(undefined), "GM");
+assert.strictEqual(getGameMonogram("Ömer'in Macerası"), "ÖM");
+assert.strictEqual(getGameMonogram("7 Days to Die"), "7D");
+
+// Soundwave Waveform Generator
+const wave36 = generateTrackWaveform("Starboy - The Weeknd", 36);
+assert.strictEqual(wave36.length, 36, "Waveform should produce exactly 36 bars");
+wave36.forEach((h, i) => {
+  assert.ok(
+    h >= 0.18 && h <= 1.0,
+    `Wave bar ${i} height ${h} should be in [0.18, 1.0]`,
+  );
+});
+// Deterministic check
+const wave36Dup = generateTrackWaveform("Starboy - The Weeknd", 36);
+assert.deepStrictEqual(wave36, wave36Dup, "Same song seed should produce identical waveform");
+
+// formatTime verification (01:24 / 03:45 pad specification)
+assert.strictEqual(formatTime(0), "00:00");
+assert.strictEqual(formatTime(5000), "00:05");
+assert.strictEqual(formatTime(84000), "01:24");
+assert.strictEqual(formatTime(225000), "03:45");
+assert.strictEqual(formatTime(3665000), "01:01:05");
 
 // 3. Test findPrimaryGameActivity
 console.log("3. Testing findPrimaryGameActivity...");
