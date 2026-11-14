@@ -54,6 +54,7 @@ create table if not exists public.profiles (
     check (surface_color ~ '^#[0-9A-Fa-f]{6}$'),
   links jsonb not null default '[]'::jsonb
     check (jsonb_typeof(links) = 'array'),
+  links_layout text not null default 'dock',
   is_published boolean not null default true,
   updated_at timestamptz not null default now()
 );
@@ -88,7 +89,8 @@ alter table public.profiles
   add column if not exists discord_global_name text,
   add column if not exists discord_avatar_url text,
   add column if not exists discord_badges text[] not null default '{}',
-  add column if not exists discord_badges_mode text not null default 'auto';
+  add column if not exists discord_badges_mode text not null default 'auto',
+  add column if not exists links_layout text not null default 'dock';
 
 alter table public.profiles enable row level security;
 grant select on public.profiles to anon, authenticated;

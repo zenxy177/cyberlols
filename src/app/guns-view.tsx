@@ -13,8 +13,7 @@ import { ViewsCounter } from "@/app/views-counter";
 import { ShareButton } from "@/app/share-button";
 import { MoonBadge } from "@/app/moon-badge";
 import { LunarEffects } from "@/app/lunar-effects";
-import { ArrowUpRight, MapPin } from "lucide-react";
-import Link from "next/link";
+import { MapPin } from "lucide-react";
 
 type GunsViewProps = {
   profile: Profile;
@@ -141,7 +140,7 @@ export function GunsView({
         </header>
 
         {/* Center 3D Tilt Card */}
-        <main className="guns-card-container">
+        <main className="guns-card-container guns-main-content">
           <ProfileCard
             enableTilt={profile.enable_tilt}
             className={`guns-main-card${profile.enable_lunar_effects ? " has-lunar-aura" : ""} border-fx-${profile.card_border_effect || "lunar_aurora"}`}
@@ -222,18 +221,10 @@ export function GunsView({
 
             {/* Compact Social Badges Grid */}
             <div className="guns-card-badges-section">
-              <SocialBadges links={links} />
+              <SocialBadges links={links} layout={profile.links_layout || "dock"} />
             </div>
           </ProfileCard>
         </main>
-
-        {/* Discreet Footer */}
-        <footer className="guns-footer">
-          <Link href="/admin/login" className="guns-footer-link interactive">
-            <span>Sahip Paneli</span>
-            <ArrowUpRight size={13} aria-hidden="true" />
-          </Link>
-        </footer>
 
         {/* Non-ready Status Banners */}
         {state !== "ready" ? (

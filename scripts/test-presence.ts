@@ -17,6 +17,10 @@ import {
   DISCORD_FLAGS,
   ALL_DISCORD_BADGES,
 } from "../src/lib/discord-badges";
+import {
+  EMPTY_PROFILE,
+  normalizeProfile,
+} from "../src/lib/profile";
 
 console.log("Starting discord-presence test suite...");
 
@@ -614,5 +618,20 @@ for (const badge of ALL_DISCORD_BADGES) {
   assert.strictEqual(typeof badge.glowColor, "string");
   assert.strictEqual(getDiscordBadge(badge.id)?.id, badge.id);
 }
+
+// 7. Testing Profile normalization & links_layout
+console.log("7. Testing Profile normalization & links_layout...");
+assert.strictEqual(EMPTY_PROFILE.links_layout, "dock");
+assert.strictEqual(normalizeProfile(null).links_layout, "dock");
+assert.strictEqual(normalizeProfile({}).links_layout, "dock");
+assert.strictEqual(normalizeProfile({ links_layout: "dock" }).links_layout, "dock");
+assert.strictEqual(normalizeProfile({ links_layout: "buttons" }).links_layout, "buttons");
+assert.strictEqual(normalizeProfile({ links_layout: "BUTTONS" }).links_layout, "buttons");
+assert.strictEqual(normalizeProfile({ links_layout: "  buttons  " }).links_layout, "buttons");
+assert.strictEqual(normalizeProfile({ links_layout: "" }).links_layout, "dock");
+assert.strictEqual(normalizeProfile({ links_layout: "invalid" as unknown }).links_layout, "dock");
+assert.strictEqual(normalizeProfile({ links_layout: 123 as unknown }).links_layout, "dock");
+assert.strictEqual(normalizeProfile({ links_layout: null as unknown }).links_layout, "dock");
+assert.strictEqual(normalizeProfile({ links_layout: undefined }).links_layout, "dock");
 
 console.log("All tests passed successfully!");

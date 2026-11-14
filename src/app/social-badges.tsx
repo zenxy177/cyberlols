@@ -1,10 +1,11 @@
 "use client";
 
-import type { ProfileLink } from "@/lib/profile";
-import { Globe, Mail } from "lucide-react";
+import type { LinksLayout, ProfileLink } from "@/lib/profile";
+import { ArrowUpRight, Globe, Mail } from "lucide-react";
 
 type SocialBadgesProps = {
   links: Array<ProfileLink & { safeUrl?: string | null }>;
+  layout?: LinksLayout;
 };
 
 type PlatformInfo = {
@@ -259,23 +260,55 @@ function detectPlatform(url: string, label: string): PlatformInfo {
   return { name: "Web", icon: Globe, brandColor: "#78A7FF" };
 }
 
-export function SocialBadges({ links }: SocialBadgesProps) {
+export function SocialBadges({ links, layout = "dock" }: SocialBadgesProps) {
   if (!links || links.length === 0) return null;
 
+  const isButtons = layout === "buttons";
+
   return (
-    <div className="guns-social-badges-container" role="list" aria-label="Sosyal Bağlantılar">
+    <div
+      className={`guns-social-badges-container ${isButtons ? "layout-buttons" : "layout-dock"}`}
+      role="list"
+      aria-label="Sosyal Bağlantılar"
+    >
       {links.map((link) => {
         const platform = detectPlatform(link.url, link.label);
         const IconComponent = platform.icon;
         const displayName = link.label?.trim() || platform.name;
 
+        if (isButtons) {
+          return (
+            <a
+              key={link.id}
+              href={link.safeUrl || undefined}
+              target={link.safeUrl ? "_blank" : undefined}
+              rel="noreferrer"
+              className="guns-social-badge layout-buttons interactive"
+              style={
+                {
+                  "--badge-color": platform.brandColor,
+                  "--badge-glow": `${platform.brandColor}66`,
+                } as React.CSSProperties
+              }
+              role="listitem"
+              aria-label={displayName}
+            >
+              <span className="guns-badge-icon" aria-hidden="true">
+                <IconComponent size={18} />
+              </span>
+              <span className="guns-badge-label">{displayName}</span>
+              <ArrowUpRight size={13} className="guns-badge-arrow" aria-hidden="true" />
+            </a>
+          );
+        }
+
         return (
           <a
             key={link.id}
-            href={link.safeUrl || "#"}
-            target="_blank"
+            href={link.safeUrl || undefined}
+            target={link.safeUrl ? "_blank" : undefined}
             rel="noreferrer"
-            className="guns-social-badge interactive"
+            className="guns-social-badge layout-dock interactive"
             style={
               {
                 "--badge-color": platform.brandColor,

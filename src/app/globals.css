@@ -2871,8 +2871,30 @@ textarea:focus-visible {
   background-color: #08090d;
   color: #f0f3f8;
   overflow-x: hidden;
+  overflow-y: auto;
   font-family: var(--sans);
   isolation: isolate;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.guns-experience-root::-webkit-scrollbar {
+  width: 6px;
+}
+
+.guns-experience-root::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.guns-experience-root::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+}
+
+.guns-experience-root::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Background Layers */
@@ -3008,8 +3030,8 @@ textarea:focus-visible {
   display: flex;
   min-height: 100svh;
   flex-direction: column;
-  justify-content: space-between;
-  padding: clamp(16px, 3vw, 32px);
+  justify-content: center;
+  padding: clamp(8px, 1.8vh, 18px) clamp(14px, 2.8vw, 28px);
   box-sizing: border-box;
   opacity: 0.7;
   filter: blur(4px);
@@ -3029,7 +3051,8 @@ textarea:focus-visible {
   gap: 16px;
   width: 100%;
   max-width: 1100px;
-  margin: 0 auto 24px;
+  margin: 0 auto clamp(6px, 1.2vh, 14px);
+  flex-shrink: 0;
 }
 
 .guns-top-bar-left {
@@ -3262,16 +3285,19 @@ textarea:focus-visible {
 }
 
 /* Center Stage & 3D Tilt Card */
-.guns-card-container {
+.guns-card-container,
+.guns-main-content {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   flex: 1;
-  padding: 18px 0;
+  padding: 0;
+  margin: 0;
 }
 
-.guns-profile-card {
+.guns-profile-card,
+.guns-main-card {
   position: relative;
   width: min(100%, 460px);
   border-radius: 26px;
@@ -3285,6 +3311,7 @@ textarea:focus-visible {
   transform-style: preserve-3d;
   will-change: transform;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 .guns-card-glare {
@@ -3303,14 +3330,14 @@ textarea:focus-visible {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: clamp(26px, 5.5vw, 42px) clamp(20px, 5vw, 36px);
-  gap: 20px;
+  padding: clamp(16px, 2.8vh, 26px) clamp(16px, 3.5vw, 28px);
+  gap: clamp(8px, 1.5vh, 16px);
 }
 
 /* Avatar */
 .guns-card-avatar-wrap {
   position: relative;
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .guns-card-avatar-glow {
@@ -3336,8 +3363,8 @@ textarea:focus-visible {
 
 .guns-card-avatar-frame {
   position: relative;
-  width: 104px;
-  height: 104px;
+  width: clamp(84px, 11vh, 100px);
+  height: clamp(84px, 11vh, 100px);
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 0 24px var(--neon-glow);
@@ -3368,13 +3395,13 @@ textarea:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
 .guns-card-name {
   margin: 0;
-  font-size: clamp(24px, 5vw, 30px);
+  font-size: clamp(22px, 3.2vh, 28px);
   font-weight: 800;
   letter-spacing: -0.03em;
   color: #ffffff;
@@ -4030,7 +4057,7 @@ textarea:focus-visible {
   border-color: var(--badge-color, #5865f2);
 }
 
-/* Social Badges Grid */
+/* Social Badges Section */
 .guns-card-badges-section {
   width: 100%;
 }
@@ -4038,33 +4065,57 @@ textarea:focus-visible {
 .guns-social-badges-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
   justify-content: center;
+  align-items: center;
   width: 100%;
 }
 
-.guns-social-badge {
-  display: inline-flex;
+/* ==============================================================================
+   LAYOUT 1: guns.lol Compact Squircle Icon Dock (Default)
+   ============================================================================== */
+.guns-social-badges-container.layout-dock {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 12px;
-  background: rgba(22, 26, 38, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #e2e8f2;
-  text-decoration: none;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  gap: clamp(6px, 1.4vw, 10px);
+  margin-top: 6px;
+  max-width: 100%;
 }
 
-.guns-social-badge:hover {
-  border-color: var(--badge-color, #78a7ff);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--badge-color, #78a7ff) 40%, transparent);
-  transform: translateY(-2.5px) scale(1.02);
-  color: #ffffff;
-  background: rgba(28, 34, 50, 0.85);
+.guns-social-badge.layout-dock,
+.guns-social-badge:not(.layout-buttons) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(40px, 4.8vw, 44px);
+  height: clamp(40px, 4.8vw, 44px);
+  border-radius: clamp(10px, 1.4vw, 12px);
+  background: rgba(18, 20, 30, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #94a3b8;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.22s ease,
+              box-shadow 0.22s ease,
+              color 0.22s ease,
+              background 0.22s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+
+.guns-social-badge.layout-dock:hover,
+.guns-social-badge:not(.layout-buttons):hover {
+  color: var(--badge-color, #ffffff);
+  border-color: var(--badge-color, #ffffff);
+  background: rgba(26, 30, 44, 0.95);
+  transform: translateY(-3.5px) scale(1.08);
+  box-shadow: 0 0 16px var(--badge-glow, rgba(255, 255, 255, 0.3)),
+              0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .guns-badge-icon {
@@ -4072,22 +4123,154 @@ textarea:focus-visible {
   place-items: center;
   color: var(--badge-color, #78a7ff);
   flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
-.guns-badge-label {
+.guns-social-badge:hover .guns-badge-icon {
+  transform: scale(1.05);
+}
+
+/* Floating Micro Tooltip for Dock mode */
+.guns-badge-tooltip {
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: rgba(12, 14, 21, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  z-index: 50;
+  max-width: min(180px, 60vw);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
-.guns-badge-arrow {
+.guns-badge-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 4px;
+  border-style: solid;
+  border-color: rgba(12, 14, 21, 0.96) transparent transparent transparent;
+}
+
+.guns-social-badge.layout-dock:hover .guns-badge-tooltip,
+.guns-social-badge:not(.layout-buttons):hover .guns-badge-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Edge alignment so tooltips never clip at card boundaries */
+.guns-social-badge.layout-dock:first-child:not(:only-child) .guns-badge-tooltip {
+  left: 0;
+  transform: translateX(0) translateY(4px);
+}
+.guns-social-badge.layout-dock:first-child:not(:only-child):hover .guns-badge-tooltip {
+  transform: translateX(0) translateY(0);
+}
+.guns-social-badge.layout-dock:first-child:not(:only-child) .guns-badge-tooltip::after {
+  left: 20px;
+  transform: none;
+}
+
+.guns-social-badge.layout-dock:last-child:not(:only-child) .guns-badge-tooltip {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(4px);
+}
+.guns-social-badge.layout-dock:last-child:not(:only-child):hover .guns-badge-tooltip {
+  transform: translateX(0) translateY(0);
+}
+.guns-social-badge.layout-dock:last-child:not(:only-child) .guns-badge-tooltip::after {
+  left: auto;
+  right: 20px;
+  transform: none;
+}
+
+/* ==============================================================================
+   LAYOUT 2: Wide Buttons with Icon, Label & Arrow
+   ============================================================================== */
+.guns-social-badges-container.layout-buttons {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.guns-social-badge.layout-buttons {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(22, 26, 38, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f2;
+  text-decoration: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+.guns-social-badge.layout-buttons:hover {
+  border-color: var(--badge-color, #78a7ff);
+  box-shadow: 0 0 16px var(--badge-glow, rgba(120, 167, 255, 0.4)),
+              0 6px 20px color-mix(in srgb, var(--badge-color, #78a7ff) 40%, transparent);
+  transform: translateY(-2px);
+  color: #ffffff;
+  background: rgba(28, 34, 50, 0.88);
+}
+
+.guns-social-badge.layout-buttons .guns-badge-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--badge-color, #78a7ff);
+}
+
+.guns-social-badge.layout-buttons .guns-badge-label {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.guns-social-badge.layout-buttons .guns-badge-arrow {
   color: #788294;
   opacity: 0.6;
-  transition: transform 0.2s, opacity 0.2s;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: transform 0.2s, opacity 0.2s, color 0.2s;
 }
 
-.guns-social-badge:hover .guns-badge-arrow {
+.guns-social-badge.layout-buttons:hover .guns-badge-arrow {
   opacity: 1;
   color: #ffffff;
-  transform: translate(1.5px, -1.5px);
+  transform: translate(2px, -2px);
 }
 
 /* Custom Cursor */
@@ -4153,33 +4336,9 @@ textarea:focus-visible {
   }
 }
 
-/* Footer */
+/* Footer (Hidden from visitor view) */
 .guns-footer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  padding-top: 16px;
-}
-
-.guns-footer-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: #687388;
-  text-decoration: none;
-  text-transform: uppercase;
-  padding: 6px 12px;
-  border-radius: 999px;
-  transition: color 0.2s, background-color 0.2s;
-}
-
-.guns-footer-link:hover {
-  color: #d8e0ee;
-  background: rgba(255, 255, 255, 0.05);
+  display: none !important;
 }
 
 /* System Notice */
@@ -5166,95 +5325,114 @@ textarea:focus-visible {
 }
 
 
-/* guns.lol Compact Squircle Social Badges & Micro Tooltips */
-.guns-social-badges-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin-top: 6px;
-}
-
-.guns-social-badge {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(18, 20, 30, 0.75);
+/* Admin Links Layout Selector */
+.link-layout-picker {
+  margin-bottom: 20px;
+  background: rgba(18, 22, 32, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.link-layout-picker-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 4px;
+}
+
+.link-layout-picker-desc {
+  display: block;
+  font-size: 11.5px;
   color: #94a3b8;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.22s ease,
-              box-shadow 0.22s ease,
-              color 0.22s ease,
-              background 0.22s ease;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  margin-bottom: 12px;
 }
 
-.guns-social-badge:hover {
-  color: var(--badge-color, #ffffff);
-  border-color: var(--badge-color, #ffffff);
-  background: rgba(26, 30, 44, 0.95);
-  transform: translateY(-3.5px) scale(1.08);
-  box-shadow: 0 0 16px var(--badge-glow, rgba(255, 255, 255, 0.3)),
-              0 8px 24px rgba(0, 0, 0, 0.5);
-}
-
-.guns-badge-icon {
+.link-layout-grid {
   display: grid;
-  place-items: center;
-  transition: transform 0.2s ease;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
-.guns-social-badge:hover .guns-badge-icon {
-  transform: scale(1.05);
+@media (max-width: 600px) {
+  .link-layout-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-/* Floating Micro Tooltip */
-.guns-badge-tooltip {
-  position: absolute;
-  bottom: calc(100% + 9px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  padding: 4px 9px;
-  border-radius: 6px;
-  background: rgba(12, 14, 21, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  font-family: var(--sans);
-  font-size: 11px;
+.link-layout-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(14, 17, 26, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.link-layout-card:hover {
+  border-color: rgba(120, 167, 255, 0.4);
+  background: rgba(22, 28, 42, 0.85);
+  transform: translateY(-1.5px);
+}
+
+.link-layout-card.is-active {
+  border-color: var(--accent, #78a7ff);
+  background: rgba(120, 167, 255, 0.1);
+  box-shadow: 0 0 16px rgba(120, 167, 255, 0.2);
+}
+
+.link-layout-radio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  margin-top: 2px;
+  flex-shrink: 0;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.link-layout-card.is-active .link-layout-radio {
+  border-color: var(--accent, #78a7ff);
+}
+
+.link-layout-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent, #78a7ff);
+  transform: scale(0);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.link-layout-card.is-active .link-layout-dot {
+  transform: scale(1);
+}
+
+.link-layout-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.link-layout-info strong {
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.18s ease, transform 0.18s ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-  z-index: 20;
+  color: #ffffff;
 }
 
-.guns-badge-tooltip::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 4px;
-  border-style: solid;
-  border-color: rgba(12, 14, 21, 0.96) transparent transparent transparent;
-}
-
-.guns-social-badge:hover .guns-badge-tooltip {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+.link-layout-info span {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.4;
 }
 
 

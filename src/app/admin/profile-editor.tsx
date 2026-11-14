@@ -780,6 +780,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         cursor_trail: form.cursor_trail || "stardust",
         enable_click_ripple: Boolean(form.enable_click_ripple),
         links,
+        links_layout: form.links_layout === "buttons" ? "buttons" : "dock",
         updated_at: new Date().toISOString(),
       };
 
@@ -825,6 +826,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
           accent_color: form.accent_color,
           surface_color: form.surface_color,
           links,
+          links_layout: form.links_layout === "buttons" ? "buttons" : "dock",
           is_published: form.is_published,
           updated_at: new Date().toISOString(),
         };
@@ -845,6 +847,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       const updatedForm: Profile = {
         ...form,
         links,
+        links_layout: form.links_layout === "buttons" ? "buttons" : "dock",
         default_volume: safeVolume,
         background_video_opacity: safeBgVideoOpacity,
         card_opacity: safeCardOpacity,
@@ -917,7 +920,8 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
   add column if not exists discord_global_name text,
   add column if not exists discord_avatar_url text,
   add column if not exists discord_badges text[] not null default '{}',
-  add column if not exists discord_badges_mode text not null default 'auto';
+  add column if not exists discord_badges_mode text not null default 'auto',
+  add column if not exists links_layout text not null default 'dock';
 
 create table if not exists public.profile_views_log (
   id uuid primary key default gen_random_uuid(),
@@ -2348,8 +2352,46 @@ notify pgrst, 'reload schema';`;
                 <div className="pane-header">
                   <h3>Sosyal Bağlantı Rozetleri ({form.links.length}/12)</h3>
                   <p>
-                    Kompakt 44x44px squircle rozetler. Marka renkleri ve hover parıltısı ile gösterilir.
+                    Kompakt 44x44px squircle rozetler veya geniş butonlar. Marka renkleri ve parıltı efektleri.
                   </p>
+                </div>
+
+                {/* Link Layout Picker: Dock vs Buttons */}
+                <div className="link-layout-picker">
+                  <span className="link-layout-picker-title">Link Düzeni</span>
+                  <span className="link-layout-picker-desc">
+                    Sosyal bağlantılarınızın profilde nasıl görüneceğini seçin:
+                  </span>
+
+                  <div className="link-layout-grid">
+                    <button
+                      type="button"
+                      className={`link-layout-card ${form.links_layout !== "buttons" ? "is-active" : ""}`}
+                      onClick={() => update("links_layout", "dock")}
+                    >
+                      <div className="link-layout-radio">
+                        <span className="link-layout-dot" />
+                      </div>
+                      <div className="link-layout-info">
+                        <strong>⚡ Kompakt İkon Çubuğu (guns.lol)</strong>
+                        <span>Yan yana dizili 44px squircle ikonlar, marka parıltısı ve hover etiketleri.</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`link-layout-card ${form.links_layout === "buttons" ? "is-active" : ""}`}
+                      onClick={() => update("links_layout", "buttons")}
+                    >
+                      <div className="link-layout-radio">
+                        <span className="link-layout-dot" />
+                      </div>
+                      <div className="link-layout-info">
+                        <strong>🔘 Geniş Butonlar</strong>
+                        <span>İkon, platform adı ve dışa yönlendirme oku içeren geniş buton tasarımı.</span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Quick Preset Platform Chips */}
@@ -2844,6 +2886,7 @@ notify pgrst, 'reload schema';`;
                       links={form.links
                         .filter((l) => l.label.trim() && l.url.trim())
                         .map((l) => ({ ...l, safeUrl: l.url }))}
+                      layout={form.links_layout || "dock"}
                     />
                   </div>
                 </div>

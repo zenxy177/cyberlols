@@ -26,6 +26,8 @@ export type CursorTrail =
 
 export type DiscordBadgeMode = "auto" | "custom" | "both";
 
+export type LinksLayout = "dock" | "buttons";
+
 export type ProfileLink = {
   id: string;
   label: string;
@@ -69,6 +71,7 @@ export type Profile = {
   enable_click_ripple: boolean;
   views_count: number;
   links: ProfileLink[];
+  links_layout: LinksLayout;
   is_published: boolean;
 };
 
@@ -109,6 +112,7 @@ export const EMPTY_PROFILE: Profile = {
   accent_color: "#78a7ff",
   surface_color: "#11131a",
   links: [],
+  links_layout: "dock",
   is_published: true,
 };
 
@@ -286,6 +290,11 @@ export function normalizeProfile(value: unknown): Profile {
       ? row.surface_color
       : EMPTY_PROFILE.surface_color,
     links,
+    links_layout:
+      typeof row.links_layout === "string" &&
+      row.links_layout.trim().toLowerCase() === "buttons"
+        ? "buttons"
+        : "dock",
     is_published: row.is_published !== false,
   };
 }
