@@ -66,21 +66,25 @@ export function ViewsCounter({ initialCount }: ViewsCounterProps) {
       return;
     }
 
-    try {
-      localStorage.setItem(STORAGE_KEY, String(now));
-    } catch {}
-    try {
-      document.cookie = `${COOKIE_NAME}=${now}; max-age=${24 * 60 * 60}; path=/; SameSite=Lax`;
-    } catch {}
-
+    // 24 saatlik istemci filtresi yalnızca istek başarılı olursa işaretlenir;
+    // aksi halde API hatası ziyaretçiyi bir gün boyunca sayılmaz bırakırdı.
     fetch("/api/views", {
       method: "POST",
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
       .then((data) => {
         if (data && typeof data.views_count === "number") {
           setCount(data.views_count);
         }
+        try {
+          localStorage.setItem(STORAGE_KEY, String(now));
+        } catch {}
+        try {
+          document.cookie = `${COOKIE_NAME}=${now}; max-age=${24 * 60 * 60}; path=/; SameSite=Lax`;
+        } catch {}
       })
       .catch(() => {
         // silently ignore view tracking errors

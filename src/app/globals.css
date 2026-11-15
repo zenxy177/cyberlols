@@ -3232,14 +3232,19 @@ textarea:focus-visible {
   cursor: pointer;
 }
 
+.guns-audio-progress-bar:focus-visible {
+  outline: 2px solid var(--accent, #78a7ff);
+  outline-offset: 4px;
+}
+
 .guns-audio-progress-fill {
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
   border-radius: 2px;
-  background: #78a7ff;
-  box-shadow: 0 0 8px rgba(120, 167, 255, 0.6);
+  background: var(--accent, #78a7ff);
+  box-shadow: 0 0 8px var(--neon-glow, rgba(120, 167, 255, 0.6));
 }
 
 .guns-audio-timestamps {
@@ -8327,4 +8332,115 @@ textarea:focus-visible {
   padding: 2px 8px;
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.3);
+}
+
+/* --- Hata / 404 fallback sayfaları --- */
+
+.fallback-stage {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(120, 167, 255, 0.16), transparent 55%),
+    radial-gradient(circle at 80% 85%, rgba(167, 139, 250, 0.12), transparent 60%),
+    #07080d;
+  color: #e8ecf8;
+  text-align: center;
+}
+
+.fallback-card {
+  width: min(440px, 100%);
+  padding: 36px 30px;
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(14, 17, 26, 0.78);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.fallback-code {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--accent, #78a7ff);
+}
+
+.fallback-title {
+  margin: 14px 0 10px;
+  font-size: clamp(24px, 5vw, 32px);
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.fallback-text {
+  margin: 0 0 26px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #a7b0c6;
+}
+
+.fallback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.fallback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e8ecf8;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.fallback-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(148, 163, 184, 0.5);
+  transform: translateY(-1px);
+}
+
+.fallback-btn.is-primary {
+  background: var(--accent, #78a7ff);
+  border-color: transparent;
+  color: #0a0c12;
+}
+
+.fallback-btn.is-primary:hover {
+  filter: brightness(1.08);
+}
+
+.fallback-btn:focus-visible {
+  outline: 2px solid var(--accent, #78a7ff);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fallback-btn {
+    transition: none;
+  }
+
+  .fallback-btn:hover {
+    transform: none;
+  }
 }

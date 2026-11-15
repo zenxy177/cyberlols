@@ -131,6 +131,30 @@ export function describeVisit(headers: Headers): VisitDescriptor {
   };
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const TIME_ZONE = "Europe/Istanbul";
+
+const dayKeyFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+const dayLabelFormatter = new Intl.DateTimeFormat("tr-TR", {
+  timeZone: TIME_ZONE,
+  day: "numeric",
+  month: "short",
+});
+const weekdayFormatter = new Intl.DateTimeFormat("tr-TR", {
+  timeZone: TIME_ZONE,
+  weekday: "short",
+});
+const hourFormatter = new Intl.DateTimeFormat("en-GB", {
+  timeZone: TIME_ZONE,
+  hour: "2-digit",
+  hour12: false,
+});
+
 export async function getRealAnalytics() {
   let logs: ViewLogEntry[] = [];
   let dbViewsCount: number | null = null;
@@ -151,11 +175,15 @@ export async function getRealAnalytics() {
       }
     }
 
+    // Son 90 günle sınırla; tablo büyüdükçe istek süresi sabit kalsın.
+    const logCutoff = new Date(Date.now() - 90 * DAY_MS).toISOString();
     const { data, error } = await supabase
       .from("profile_views_log")
       .select("*")
       .eq("profile_id", "main")
-      .order("viewed_at", { ascending: false });
+      .gte("viewed_at", logCutoff)
+      .order("viewed_at", { ascending: false })
+      .limit(10000);
 
     if (!error && data && data.length > 0) {
       logs = data.map((d) => ({
@@ -175,35 +203,34 @@ export async function getRealAnalytics() {
   }
 
   const totalViews = dbViewsCount !== null ? dbViewsCount : logs.length;
-  const logTotal = logs.length;
-
-  // Day names in Turkish
-  const dayNames = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
-  const monthNames = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
   const now = new Date();
+  const rpcSince = now.getTime() - 7 * DAY_MS;
+  const recentLogs = logs.filter(
+    (l) => new Date(l.viewed_at).getTime() >= rpcSince,
+  );
+  const recentTotal = recentLogs.length;
 
-  // Last 7 days calendar
+  // Son 7 gün: İstanbul takvimine göre gün grupları
   const weeklyTrend = Array.from({ length: 7 }, (_, i) => {
-    const targetDate = new Date(now);
-    targetDate.setDate(targetDate.getDate() - (6 - i));
-    const dayStr = targetDate.toISOString().slice(0, 10);
-    const dayName = dayNames[targetDate.getDay()];
-    const dateFormatted = `${targetDate.getDate()} ${monthNames[targetDate.getMonth()]}`;
-
-    const matchCount = logs.filter((l) => l.viewed_at.startsWith(dayStr)).length;
-
+    const target = new Date(now.getTime() - (6 - i) * DAY_MS);
     return {
-      date: dateFormatted,
-      dayName,
-      views: matchCount,
+      key: dayKeyFormatter.format(target),
+      date: dayLabelFormatter.format(target),
+      dayName: weekdayFormatter.format(target),
+      views: 0,
     };
   });
+  const trendByKey = new Map(weeklyTrend.map((item) => [item.key, item]));
+  for (const log of logs) {
+    const bucket = trendByKey.get(dayKeyFormatter.format(new Date(log.viewed_at)));
+    if (bucket) bucket.views++;
+  }
 
   const weeklyViews = weeklyTrend.reduce((sum, item) => sum + item.views, 0);
 
-  // Device Breakdown (REAL)
+  // Device Breakdown (son 7 gün)
   const deviceCounts: Record<string, number> = { desktop: 0, mobile: 0, tablet: 0 };
-  for (const l of logs) {
+  for (const l of recentLogs) {
     if (deviceCounts[l.device_type] !== undefined) {
       deviceCounts[l.device_type]++;
     } else {
@@ -216,25 +243,25 @@ export async function getRealAnalytics() {
       type: "desktop",
       label: "Masaüstü (Desktop)",
       count: deviceCounts.desktop,
-      percentage: logTotal > 0 ? Math.round((deviceCounts.desktop / logTotal) * 100) : 0,
+      percentage: recentTotal > 0 ? Math.round((deviceCounts.desktop / recentTotal) * 100) : 0,
     },
     {
       type: "mobile",
       label: "Mobil (Smartphone)",
       count: deviceCounts.mobile,
-      percentage: logTotal > 0 ? Math.round((deviceCounts.mobile / logTotal) * 100) : 0,
+      percentage: recentTotal > 0 ? Math.round((deviceCounts.mobile / recentTotal) * 100) : 0,
     },
     {
       type: "tablet",
       label: "Tablet",
       count: deviceCounts.tablet,
-      percentage: logTotal > 0 ? Math.round((deviceCounts.tablet / logTotal) * 100) : 0,
+      percentage: recentTotal > 0 ? Math.round((deviceCounts.tablet / recentTotal) * 100) : 0,
     },
   ];
 
-  // Referrers Breakdown (REAL)
+  // Referrers Breakdown (son 7 gün)
   const refCounts: Record<string, number> = {};
-  for (const l of logs) {
+  for (const l of recentLogs) {
     const r = l.referrer || "Doğrudan (Direct / URL)";
     refCounts[r] = (refCounts[r] || 0) + 1;
   }
@@ -245,12 +272,12 @@ export async function getRealAnalytics() {
     .map(([name, count]) => ({
       name,
       count,
-      percentage: logTotal > 0 ? Math.round((count / logTotal) * 100) : 0,
+      percentage: recentTotal > 0 ? Math.round((count / recentTotal) * 100) : 0,
     }));
 
-  // Countries Breakdown (REAL)
+  // Countries Breakdown (son 7 gün)
   const countryCounts: Record<string, { count: number; name: string; flag: string }> = {};
-  for (const l of logs) {
+  for (const l of recentLogs) {
     const code = l.country_code || "TR";
     const info = COUNTRY_MAP[code] || { name: l.country_name || code, flag: l.flag || "🌍" };
     if (!countryCounts[code]) {
@@ -267,19 +294,41 @@ export async function getRealAnalytics() {
       name: item.name,
       flag: item.flag,
       count: item.count,
-      percentage: logTotal > 0 ? Math.round((item.count / logTotal) * 100) : 0,
+      percentage: recentTotal > 0 ? Math.round((item.count / recentTotal) * 100) : 0,
     }));
+
+  // Gerçek en yoğun saat dilimi (son 7 gün)
+  let peakHour = "Veri Bekleniyor";
+  if (recentTotal > 0) {
+    const hourCounts = new Array<number>(24).fill(0);
+    for (const l of recentLogs) {
+      const hour = Number(hourFormatter.format(new Date(l.viewed_at)));
+      if (Number.isFinite(hour) && hour >= 0 && hour < 24) {
+        hourCounts[hour]++;
+      }
+    }
+    const peakCount = Math.max(...hourCounts);
+    if (peakCount > 0) {
+      const peakIndex = hourCounts.indexOf(peakCount);
+      peakHour = `${String(peakIndex).padStart(2, "0")}:00 - ${String(
+        (peakIndex + 1) % 24,
+      ).padStart(2, "0")}:00`;
+    }
+  }
 
   return {
     ok: true,
-    hasRealData: totalViews > 0 || logTotal > 0,
+    hasRealData: totalViews > 0 || logs.length > 0,
     totalViews,
     weeklyViews,
-    weeklyTrend,
+    weeklyTrend: weeklyTrend.map(({ date, dayName, views }) => ({
+      date,
+      dayName,
+      views,
+    })),
     deviceStats,
     referrerStats,
     countryStats,
-    peakHour: totalViews > 0 ? "Akşam Trafiği" : "Veri Bekleniyor",
-    avgDuration: totalViews > 0 ? "Gerçek Ziyaretçi" : "-",
+    peakHour,
   };
 }

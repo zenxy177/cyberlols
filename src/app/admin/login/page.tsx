@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AdminLoginForm } from "@/app/admin/login/login-form";
 import { isSupabaseConfigured } from "@/lib/profile";
+
+export const metadata: Metadata = {
+  title: "Giriş • Cyber Studio",
+  robots: { index: false, follow: false },
+};
 
 export default function AdminLoginPage() {
   const configured = isSupabaseConfigured();

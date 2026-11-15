@@ -207,15 +207,38 @@ export function AudioPlayer({
     }
   }
 
+  function seekTo(seconds: number) {
+    const el = getMedia();
+    if (!el || !isFinite(duration) || duration <= 0) return;
+    const clamped = Math.max(0, Math.min(duration, seconds));
+    el.currentTime = clamped;
+    setCurrentTime(clamped);
+  }
+
+  function handleSeekKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const step = 5;
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+      e.preventDefault();
+      seekTo(currentTime + step);
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+      e.preventDefault();
+      seekTo(currentTime - step);
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      seekTo(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      seekTo(duration);
+    }
+  }
+
   function handleSeek(e: MouseEvent<HTMLDivElement>) {
     const el = getMedia();
     if (!progressBarRef.current || !el || !isFinite(duration) || duration <= 0) return;
     const rect = progressBarRef.current.getBoundingClientRect();
     const clickPosition = (e.clientX - rect.left) / rect.width;
     const boundedPosition = Math.max(0, Math.min(1, clickPosition));
-    const newTime = boundedPosition * duration;
-    el.currentTime = newTime;
-    setCurrentTime(newTime);
+    seekTo(boundedPosition * duration);
   }
 
   if (!audioUrl && !videoRef) return null;
@@ -273,10 +296,14 @@ export function AudioPlayer({
           ref={progressBarRef}
           className="guns-audio-progress-bar"
           onClick={handleSeek}
-          role="progressbar"
-          aria-valuenow={currentTime}
+          onKeyDown={handleSeekKeyDown}
+          role="slider"
+          tabIndex={0}
+          aria-label="Müzik konumu"
+          aria-valuenow={Math.round(currentTime)}
           aria-valuemin={0}
-          aria-valuemax={duration || 100}
+          aria-valuemax={Math.round(duration) || 100}
+          aria-valuetext={`${formatTime(currentTime)} / ${formatTime(duration)}`}
         >
           <div
             className="guns-audio-progress-fill"

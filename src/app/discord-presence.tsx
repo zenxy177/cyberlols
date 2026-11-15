@@ -1665,6 +1665,9 @@ export function DiscordPresence({
 
     let ws: WebSocket | null = null;
     let heartbeatInterval: NodeJS.Timeout | null = null;
+    let reconnectTimer: NodeJS.Timeout | null = null;
+    let reconnectAttempts = 0;
+    let disposed = false;
 
     // Fetch initial REST data first for fast render
     fetch(`https://api.lanyard.rest/v1/users/${discordUserId}`)
@@ -1678,15 +1681,51 @@ export function DiscordPresence({
         console.warn("Lanyard REST fetch failed, using fallback:", err);
       });
 
-    // Connect WebSocket for live real-time updates
-    try {
-      ws = new WebSocket("wss://api.lanyard.rest/socket");
+    function clearHeartbeat() {
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+      }
+    }
+
+    function closeSocket() {
+      clearHeartbeat();
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      if (ws) {
+        ws.onclose = null;
+        try {
+          ws.close();
+        } catch {
+          // ignore
+        }
+        ws = null;
+      }
+    }
+
+    function connect() {
+      if (disposed || document.hidden) return;
+      closeSocket();
+
+      // Connect WebSocket for live real-time updates
+      try {
+        ws = new WebSocket("wss://api.lanyard.rest/socket");
+      } catch {
+        return;
+      }
+
+      ws.onopen = () => {
+        reconnectAttempts = 0;
+      };
 
       ws.onmessage = (event) => {
         try {
           const packet = JSON.parse(event.data);
           // Opcode 1: Hello (contains heartbeat interval)
           if (packet.op === 1) {
+            clearHeartbeat();
             const interval = packet.d.heartbeat_interval;
             heartbeatInterval = setInterval(() => {
               if (ws && ws.readyState === WebSocket.OPEN) {
@@ -1718,22 +1757,36 @@ export function DiscordPresence({
         }
       };
 
-      ws.onerror = () => {
-        // Silently tolerate WS errors (fallback to REST or static data)
+      // Bağlantı kopunca üstel geri çekilmeyle yeniden bağlan (en fazla 5 deneme)
+      ws.onclose = () => {
+        clearHeartbeat();
+        if (disposed || document.hidden || reconnectAttempts >= 5) return;
+        const delay = Math.min(30_000, 1_000 * 2 ** reconnectAttempts);
+        reconnectAttempts++;
+        reconnectTimer = setTimeout(connect, delay);
       };
-    } catch {
-      // WS unsupported or blocked
+
+      ws.onerror = () => {
+        // onclose yeniden bağlanmayı yönetir; burada sessiz kal.
+      };
     }
 
-    return () => {
-      if (heartbeatInterval) clearInterval(heartbeatInterval);
-      if (ws) {
-        try {
-          ws.close();
-        } catch {
-          // ignore
-        }
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        closeSocket();
+      } else {
+        reconnectAttempts = 0;
+        connect();
       }
+    }
+
+    connect();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      disposed = true;
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      closeSocket();
     };
   }, [discordUserId]);
 

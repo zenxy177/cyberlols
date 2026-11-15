@@ -1,24 +1,27 @@
 import type { CSSProperties } from "react";
+import type { Metadata } from "next";
+import { cache } from "react";
 import {
   EMPTY_PROFILE,
   isSupabaseConfigured,
   normalizeProfile,
   safeExternalUrl,
+  type Profile,
 } from "@/lib/profile";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { GunsView } from "@/app/guns-view";
+import { DynamicTabTitle } from "@/app/dynamic-tab-title";
 
 export const dynamic = "force-dynamic";
 
 type LoadState = "ready" | "setup" | "unpublished" | "error";
 
-export default async function HomePage() {
-  let profile = EMPTY_PROFILE;
-  let state: LoadState = "ready";
+const loadHomeProfile = cache(
+  async (): Promise<{ profile: Profile; state: LoadState }> => {
+    if (!isSupabaseConfigured()) {
+      return { profile: EMPTY_PROFILE, state: "setup" };
+    }
 
-  if (!isSupabaseConfigured()) {
-    state = "setup";
-  } else {
     try {
       const supabase = await createServerSupabase();
       const { data, error } = await supabase
@@ -28,18 +31,80 @@ export default async function HomePage() {
         .maybeSingle();
 
       if (error) {
-        state = "error";
         console.error("Public profile query failed:", error.message);
-      } else if (data) {
-        profile = normalizeProfile(data);
-      } else {
-        state = "unpublished";
+        return { profile: EMPTY_PROFILE, state: "error" };
       }
+      if (!data) {
+        return { profile: EMPTY_PROFILE, state: "unpublished" };
+      }
+      return { profile: normalizeProfile(data), state: "ready" };
     } catch (err) {
-      state = "error";
       console.error("Error loading profile:", err);
+      return { profile: EMPTY_PROFILE, state: "error" };
     }
+  },
+);
+
+function profileName(profile: Profile): string {
+  return (
+    profile.display_name.trim() ||
+    profile.discord_global_name?.trim() ||
+    "Emir"
+  );
+}
+
+function metadataBaseUrl(): URL | undefined {
+  const configured =
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+  if (!configured) return undefined;
+  try {
+    return new URL(configured);
+  } catch {
+    return undefined;
   }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { profile, state } = await loadHomeProfile();
+  const name = profileName(profile);
+  const badge = profile.enable_moon_badge ? "🌙" : "";
+  const title = `${name} ${badge}`.trim();
+  const description = (
+    profile.headline.trim() ||
+    profile.bio.trim() ||
+    `${name} • kişisel bio profili.`
+  ).slice(0, 160);
+  const avatar = profile.avatar_url ? safeExternalUrl(profile.avatar_url) : null;
+  const images = avatar ? [{ url: avatar, alt: name }] : undefined;
+  const isPublic = state === "ready" && profile.is_published;
+
+  return {
+    metadataBase: metadataBaseUrl(),
+    title,
+    description,
+    alternates: { canonical: "/" },
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      siteName: name,
+      images,
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+      images,
+    },
+    robots: isPublic
+      ? { index: true, follow: true }
+      : { index: false, follow: false },
+  };
+}
+
+export default async function HomePage() {
+  const { profile, state } = await loadHomeProfile();
 
   const avatarUrl = profile.avatar_url
     ? safeExternalUrl(profile.avatar_url)
@@ -66,12 +131,20 @@ export default async function HomePage() {
   const isCustomCursorActive =
     profile.enable_custom_cursor && profile.cursor_style !== "default";
 
+  const handle =
+    (profile.discord_username?.trim() || profile.display_name.trim() || "warxy")
+      .replace(/^@/, "") || "warxy";
+
   return (
     <div
       className="guns-experience-root"
       style={containerStyle}
       data-custom-cursor={isCustomCursorActive ? "true" : "false"}
     >
+      <DynamicTabTitle
+        text={`@${handle}`}
+        badge={profile.enable_moon_badge ? "🌙" : ""}
+      />
       <GunsView
         profile={profile}
         avatarUrl={avatarUrl}

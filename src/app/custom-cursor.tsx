@@ -28,6 +28,40 @@ type ClickRipple = {
   y: number;
 };
 
+type Rgb = { r: number; g: number; b: number };
+
+function parseHexColor(value: string): Rgb | null {
+  const clean = value.trim().replace(/^#/, "");
+  const full =
+    clean.length === 3
+      ? clean
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : clean;
+  if (!/^[\da-f]{6}$/i.test(full)) return null;
+  return {
+    r: parseInt(full.slice(0, 2), 16),
+    g: parseInt(full.slice(2, 4), 16),
+    b: parseInt(full.slice(4, 6), 16),
+  };
+}
+
+function mixWithWhite(rgb: Rgb, amount: number): Rgb {
+  const t = Math.max(0, Math.min(1, amount));
+  return {
+    r: Math.round(rgb.r + (255 - rgb.r) * t),
+    g: Math.round(rgb.g + (255 - rgb.g) * t),
+    b: Math.round(rgb.b + (255 - rgb.b) * t),
+  };
+}
+
+function rgbaString(rgb: Rgb, alpha = 1): string {
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+}
+
+const FALLBACK_ACCENT: Rgb = { r: 120, g: 167, b: 255 };
+
 export function CustomCursor({
   enabled = true,
   cursorStyle = "neon_dot",
@@ -70,6 +104,16 @@ export function CustomCursor({
     const canvas = canvasRef.current;
     let ctx: CanvasRenderingContext2D | null = null;
 
+    const rootEl = document.querySelector<HTMLElement>(".guns-experience-root");
+    const accentValue = rootEl
+      ? getComputedStyle(rootEl).getPropertyValue("--accent").trim()
+      : "";
+    const accentRgb = parseHexColor(accentValue) ?? FALLBACK_ACCENT;
+    const stardustColors = [0.92, 0.78, 0.6, 0.4, 0.18].map((amount) =>
+      rgbaString(mixWithWhite(accentRgb, amount)),
+    );
+    const stardustGlow = rgbaString(accentRgb, 0.8);
+
     if (canvas && cursorTrail === "stardust") {
       ctx = canvas.getContext("2d");
       canvas.width = window.innerWidth;
@@ -94,8 +138,8 @@ export function CustomCursor({
         particles.current.shift();
       }
 
-      const colors = ["#f8fafc", "#e0f2fe", "#bae6fd", "#7dd3fc", "#e2e8f0"];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      const randomColor =
+        stardustColors[Math.floor(Math.random() * stardustColors.length)];
 
       particles.current.push({
         x: x + (Math.random() - 0.5) * 8,
@@ -214,7 +258,7 @@ export function CustomCursor({
           ctx.arc(p.x, p.y, p.size * (1 - progress * 0.4), 0, Math.PI * 2);
           ctx.fillStyle = p.color;
           ctx.globalAlpha = currentOpacity;
-          ctx.shadowColor = "rgba(224, 242, 254, 0.8)";
+          ctx.shadowColor = stardustGlow;
           ctx.shadowBlur = 6;
           ctx.fill();
           ctx.restore();

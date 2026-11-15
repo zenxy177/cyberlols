@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, Eye, Moon, ShieldCheck } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -11,6 +12,11 @@ import {
 import { createServerSupabase } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Cyber Studio • @warxy",
+  robots: { index: false, follow: false },
+};
 
 const discordNotices: Record<string, { kind: "success" | "error"; message: string }> = {
   connected: {

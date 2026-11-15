@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Volume2 } from "lucide-react";
 
 type ClickToEnterProps = {
@@ -14,6 +14,11 @@ export function ClickToEnter({
 }: ClickToEnterProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [isFading, setIsFading] = useState(false);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    overlayRef.current?.focus();
+  }, []);
 
   const handleTrigger = useCallback(() => {
     if (isFading || !isVisible) return;
@@ -32,7 +37,8 @@ export function ClickToEnter({
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Enter" || event.key === " " || event.key === "Escape") {
+      // Escape girişi tetiklememeli; yalnızca Enter/Space ile ilerlenir.
+      if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         handleTrigger();
       }
@@ -46,6 +52,7 @@ export function ClickToEnter({
 
   return (
     <div
+      ref={overlayRef}
       className={`click-to-enter-overlay${isFading ? " click-to-enter-fading" : ""}`}
       onClick={handleTrigger}
       role="button"

@@ -271,7 +271,6 @@ type AnalyticsData = {
   referrerStats: Array<{ name: string; percentage: number; count: number }>;
   countryStats: Array<{ code: string; name: string; flag: string; percentage: number; count: number }>;
   peakHour: string;
-  avgDuration: string;
 };
 
 type EditorState = {
@@ -382,6 +381,17 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
   }
 
   const hasUnsavedChanges = JSON.stringify(form) !== JSON.stringify(originalForm);
+
+  // Sekme kapatılırken kaydedilmemiş değişiklikleri koru
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const persistRef = useRef(persistProfileData);
   persistRef.current = persistProfileData;
@@ -2637,7 +2647,7 @@ notify pgrst, 'reload schema';`;
                     <strong className="mini-stat-val">
                       {analyticsData?.peakHour ?? "Veri Bekleniyor"}
                     </strong>
-                    <span className="mini-stat-sub">aktif dönem</span>
+                    <span className="mini-stat-sub">son 7 günün en yoğun saati</span>
                   </div>
                   <div className="analytics-mini-stat">
                     <span className="mini-stat-label">Doğruluk Modu</span>
@@ -2690,7 +2700,12 @@ notify pgrst, 'reload schema';`;
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleUpdateViews(0)}
+                      onClick={() => {
+                        const confirmed = window.confirm(
+                          "Sayaç 0'a çekilecek ve tüm ziyaretçi logları kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam edilsin mi?",
+                        );
+                        if (confirmed) void handleUpdateViews(0);
+                      }}
                       disabled={savingViews}
                       className="studio-btn studio-btn-ghost danger"
                     >
@@ -2738,7 +2753,7 @@ notify pgrst, 'reload schema';`;
                   <div className="analytics-card">
                     <div className="analytics-card-title">
                       <Laptop size={15} />
-                      <strong>Cihaz & Platform Dağılımı</strong>
+                      <strong>Cihaz & Platform Dağılımı (Son 7 Gün)</strong>
                     </div>
                     <div className="breakdown-list">
                       {(analyticsData?.deviceStats ?? []).map((d) => (
@@ -2771,7 +2786,7 @@ notify pgrst, 'reload schema';`;
                   <div className="analytics-card">
                     <div className="analytics-card-title">
                       <Compass size={15} />
-                      <strong>Trafik Kaynakları (Referrers)</strong>
+                      <strong>Trafik Kaynakları (Son 7 Gün)</strong>
                     </div>
                     <div className="breakdown-list">
                       {(analyticsData?.referrerStats ?? []).length > 0 ? (
@@ -2802,7 +2817,7 @@ notify pgrst, 'reload schema';`;
                 <div className="analytics-card full-width">
                   <div className="analytics-card-title">
                     <Globe size={15} />
-                    <strong>Coğrafi Ziyaretçi Dağılımı (Ülkeler)</strong>
+                    <strong>Coğrafi Ziyaretçi Dağılımı (Son 7 Gün)</strong>
                   </div>
                   <div className="countries-grid">
                     {(analyticsData?.countryStats ?? []).length > 0 ? (

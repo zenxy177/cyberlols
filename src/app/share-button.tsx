@@ -1,10 +1,16 @@
 "use client";
 
 import { Share2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function ShareButton() {
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (!message) return;
+    const timeoutId = setTimeout(() => setMessage(""), 3500);
+    return () => clearTimeout(timeoutId);
+  }, [message]);
 
   async function sharePage() {
     if (navigator.share) {
