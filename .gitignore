@@ -5,7 +5,6 @@ node_modules/
 out/
 coverage/
 npm-debug.log*
-.analytics-log.json
 .DS_Store
 *.pem
 .turbo

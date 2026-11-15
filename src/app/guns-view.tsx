@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { hexToRgba, type Profile } from "@/lib/profile";
+import { hexToRgba, cardScrimAlpha, type Profile } from "@/lib/profile";
 import { ClickToEnter } from "@/app/click-to-enter";
 import { AudioPlayer } from "@/app/audio-player";
 import { ProfileCard } from "@/app/profile-card";
@@ -53,6 +53,9 @@ export function GunsView({
     profile.surface_color,
     (profile.card_opacity ?? 75) / 100
   );
+
+  // Metin okunabilirliğini kullanıcı opaklığından bağımsız garanti eder.
+  const cardScrim = cardScrimAlpha(profile.card_opacity ?? 75);
 
   return (
     <>
@@ -147,6 +150,7 @@ export function GunsView({
             style={{
               backgroundColor: cardBg,
               ["--card-surface-rgba" as string]: cardBg,
+              ["--card-scrim-alpha" as string]: cardScrim.toFixed(3),
             }}
           >
                 {/* Card Header: Avatar & Glow */}

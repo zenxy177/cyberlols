@@ -25,10 +25,9 @@ export function ClickToEnter({
     }
 
     onEnter();
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setIsVisible(false);
     }, 600);
-    return () => clearTimeout(timer);
   }, [isFading, isVisible, onEnter]);
 
   useEffect(() => {

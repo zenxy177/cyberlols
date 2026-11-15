@@ -24,6 +24,7 @@ export function LunarEffects({ enabled = true }: LunarEffectsProps) {
     if (!enabled) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;

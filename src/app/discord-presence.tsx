@@ -1145,18 +1145,7 @@ export function formatTime(ms: number): string {
   return `${pad(minutes)}:${pad(seconds)}`;
 }
 
-export function formatElapsed(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
-
-  if (hours > 0) {
-    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-  }
-  return `${pad(minutes)}:${pad(seconds)}`;
-}
+export const formatElapsed = formatTime;
 
 export function formatElapsedHuman(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -1578,7 +1567,7 @@ function SpotifyCard({ spotify }: { spotify: LanyardSpotify }) {
       <div className="guns-spotify-header">
         <div className="guns-spotify-label">
           <SpotifyIcon size={14} />
-          <span>LISTENING TO SPOTIFY</span>
+          <span>{"SPOTIFY'DA DİNLİYOR"}</span>
         </div>
         <div className="guns-spotify-waves" aria-hidden="true">
           <span className="spotify-wave-bar bar-1" />
@@ -1648,6 +1637,17 @@ function SpotifyCard({ spotify }: { spotify: LanyardSpotify }) {
       ) : null}
     </a>
   );
+}
+
+const DISCORD_STATUS_LABELS: Record<string, string> = {
+  online: "Çevrimiçi",
+  idle: "Boşta",
+  dnd: "Rahatsız Etme",
+  offline: "Çevrimdışı",
+};
+
+function discordStatusLabel(status: string): string {
+  return DISCORD_STATUS_LABELS[status] ?? status;
 }
 
 export function DiscordPresence({
@@ -1775,7 +1775,7 @@ export function DiscordPresence({
         target="_blank"
         rel="noreferrer"
         className="guns-discord-badge"
-        aria-label={`Discord profili: ${displayName} (${status})`}
+        aria-label={`Discord profili: ${displayName} (${discordStatusLabel(status)})`}
       >
         <div className="guns-discord-avatar-container">
           {avatarUrl ? (
@@ -1839,7 +1839,7 @@ export function DiscordPresence({
             </div>
           ) : (
             <div className="guns-discord-status-text">
-              <span>{status.toUpperCase()}</span>
+              <span>{discordStatusLabel(status).toLocaleUpperCase("tr-TR")}</span>
             </div>
           )}
         </div>

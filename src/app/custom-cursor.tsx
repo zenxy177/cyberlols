@@ -58,7 +58,13 @@ export function CustomCursor({
 
   useEffect(() => {
     if (!enabled) return;
-    if (typeof window === "undefined" || window.matchMedia("(pointer: coarse)").matches) return;
+    if (
+      typeof window === "undefined" ||
+      window.matchMedia("(pointer: coarse)").matches ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
 
     let animationFrameId: number;
     const canvas = canvasRef.current;

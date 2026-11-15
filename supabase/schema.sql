@@ -155,15 +155,8 @@ begin
   where id = profile_slug
   returning views_count into new_count;
 
-  if new_count is null then
-    insert into public.profiles (id, views_count)
-    values (profile_slug, 1)
-    on conflict (id) do update
-    set views_count = coalesce(public.profiles.views_count, 0) + 1
-    returning views_count into new_count;
-  end if;
-
-  return coalesce(new_count, 1);
+  -- Profil kaydı yoksa boş bir profil oluşturma; sayaç 0 döner.
+  return coalesce(new_count, 0);
 end;
 $$;
 
@@ -265,14 +258,20 @@ create table if not exists public.profile_views_log (
   browser text not null default 'Chrome',
   country_code text not null default 'TR',
   country_name text not null default 'Türkiye',
-  referrer text not null default 'Doğrudan (Direct / URL)'
+  referrer text not null default 'Doğrudan (Direct / URL)',
+  ip_hash text
 );
+
+alter table public.profile_views_log
+  add column if not exists ip_hash text;
 
 create index if not exists idx_profile_views_log_viewed_at on public.profile_views_log (viewed_at desc);
 create index if not exists idx_profile_views_log_profile_id on public.profile_views_log (profile_id);
+create index if not exists idx_profile_views_log_ip_hash on public.profile_views_log (ip_hash, viewed_at desc);
 
 alter table public.profile_views_log enable row level security;
-grant select, insert on public.profile_views_log to anon, authenticated;
+grant insert on public.profile_views_log to anon, authenticated;
+grant select, delete on public.profile_views_log to authenticated;
 
 drop policy if exists "Anyone can record a view log" on public.profile_views_log;
 create policy "Anyone can record a view log"
@@ -285,5 +284,68 @@ drop policy if exists "Admins can view all logs" on public.profile_views_log;
 create policy "Admins can view all logs"
   on public.profile_views_log
   for select
-  to anon, authenticated
-  using (true);
+  to authenticated
+  using ((select public.is_site_admin()));
+
+drop policy if exists "Admins can delete logs" on public.profile_views_log;
+create policy "Admins can delete logs"
+  on public.profile_views_log
+  for delete
+  to authenticated
+  using ((select public.is_site_admin()));
+
+create or replace function public.record_profile_view(
+  profile_slug text default 'main',
+  device_type text default 'desktop',
+  browser_name text default 'Chrome',
+  visitor_country text default 'TR',
+  country_label text default 'Türkiye',
+  referrer_source text default 'Doğrudan (Direct / URL)',
+  visitor_ip_hash text default null
+)
+returns table (current_views_count bigint, visit_recorded boolean)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  already_seen boolean := false;
+  counted_views bigint;
+begin
+  if visitor_ip_hash is not null then
+    perform pg_advisory_xact_lock(hashtext('profile_view'), hashtext(visitor_ip_hash));
+
+    select exists (
+      select 1
+      from public.profile_views_log
+      where profile_id = profile_slug
+        and ip_hash = visitor_ip_hash
+        and viewed_at >= now() - interval '24 hours'
+    ) into already_seen;
+  end if;
+
+  if already_seen then
+    select coalesce(p.views_count, 0) into counted_views
+    from public.profiles p
+    where p.id = profile_slug;
+
+    return query select coalesce(counted_views, 0), false;
+    return;
+  end if;
+
+  insert into public.profile_views_log (
+    profile_id, device_type, browser, country_code, country_name, referrer, ip_hash
+  ) values (
+    profile_slug, device_type, browser_name, visitor_country, country_label, referrer_source, visitor_ip_hash
+  );
+
+  update public.profiles
+  set views_count = coalesce(profiles.views_count, 0) + 1
+  where profiles.id = profile_slug
+  returning profiles.views_count into counted_views;
+
+  return query select coalesce(counted_views, 0), true;
+end;
+$$;
+
+grant execute on function public.record_profile_view(text, text, text, text, text, text, text) to anon, authenticated;

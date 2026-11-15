@@ -32,8 +32,19 @@ export function TypewriterBio({
   const [lineIndex, setLineIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduceMotion(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+
     let timer: NodeJS.Timeout;
     const safeIndex = lineIndex % activeLines.length;
     const currentLine = activeLines[safeIndex] || "";
@@ -64,12 +75,16 @@ export function TypewriterBio({
     }
 
     return () => clearTimeout(timer);
-  }, [displayText, isDeleting, lineIndex, activeLines, speed, deleteSpeed, pauseTime]);
+  }, [displayText, isDeleting, lineIndex, activeLines, speed, deleteSpeed, pauseTime, reduceMotion]);
 
   return (
     <div className="guns-typewriter-container" aria-label={activeLines.join(". ")}>
-      <span className="guns-typewriter-text">{displayText}</span>
-      <span className="guns-typewriter-cursor" aria-hidden="true" />
+      <span className="guns-typewriter-text">
+        {reduceMotion ? activeLines.join("  ·  ") : displayText}
+      </span>
+      {reduceMotion ? null : (
+        <span className="guns-typewriter-cursor" aria-hidden="true" />
+      )}
     </div>
   );
 }

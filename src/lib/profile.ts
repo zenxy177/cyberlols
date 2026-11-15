@@ -319,8 +319,13 @@ export function readableInk(backgroundColor: string): string {
 }
 
 export function safeExternalUrl(value: string): string | null {
+  const trimmed = value.trim();
+  if (/^mailto:[^\s@]+@[^\s@]+$/i.test(trimmed)) {
+    return trimmed;
+  }
+
   try {
-    const url = new URL(value);
+    const url = new URL(trimmed);
     if (url.protocol === "https:" || url.protocol === "http:") {
       return url.toString();
     }
@@ -331,11 +336,18 @@ export function safeExternalUrl(value: string): string | null {
   return null;
 }
 
+export const safeLinkUrl = safeExternalUrl;
+
 export function isSupabaseConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   );
+}
+
+export function cardScrimAlpha(opacity: number): number {
+  const clamped = clampNumber(opacity, 75, 0, 100);
+  return Math.max(0.16, 0.6 - (clamped / 100) * 0.45);
 }
 
 export function hexToRgba(hex: string, alpha: number): string {

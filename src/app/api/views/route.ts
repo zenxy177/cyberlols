@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/profile";
-import { clearAnalyticsLogs, recordRealVisit } from "@/lib/analytics-storage";
+import { describeVisit } from "@/lib/analytics-storage";
 
 export async function POST(req: Request) {
   if (!isSupabaseConfigured()) {
@@ -37,16 +37,43 @@ export async function POST(req: Request) {
       });
     }
 
-    // Always log real visit for genuine visitors
-    try {
-      await recordRealVisit(req.headers);
-    } catch (logErr) {
-      console.warn("Analytics real visit record error:", logErr);
+    // Atomik kayıt: aynı IP 24 saat içinde tekrar sayılmaz. Anon istemci
+    // log tablosunu okuyamadığı için tekilleştirme RPC içinde yapılır.
+    const visit = describeVisit(req.headers);
+    const visitRpc = await supabase.rpc("record_profile_view", {
+      profile_slug: visit.payload.profile_id,
+      device_type: visit.payload.device_type,
+      browser_name: visit.payload.browser,
+      visitor_country: visit.payload.country_code,
+      country_label: visit.payload.country_name,
+      referrer_source: visit.payload.referrer,
+      visitor_ip_hash: visit.ipHash,
+    });
+
+    if (!visitRpc.error && visitRpc.data) {
+      const row = Array.isArray(visitRpc.data) ? visitRpc.data[0] : visitRpc.data;
+      const recorded = Number(row?.current_views_count);
+      if (Number.isFinite(recorded)) {
+        return NextResponse.json({
+          ok: true,
+          views_count: recorded,
+          unique: Boolean(row?.visit_recorded),
+        });
+      }
+    } else if (visitRpc.error) {
+      console.warn("RPC record_profile_view error:", visitRpc.error.message);
     }
 
-    // Call atomic stored procedure (support profile_id, no-arg, and profile_slug)
+    // Eski şema yedeği: RPC yoksa log yaz ve sayacı artır.
+    try {
+      await supabase.from("profile_views_log").insert(visit.payload);
+    } catch (logErr) {
+      console.warn("Analytics visit log insert error:", logErr);
+    }
+
+    // Call atomic stored procedure (schema uses profile_slug; default arg also works)
     let count: number | null = null;
-    const rpc1 = await supabase.rpc("increment_profile_views", { profile_id: "main" });
+    const rpc1 = await supabase.rpc("increment_profile_views", { profile_slug: "main" });
     if (!rpc1.error && typeof rpc1.data === "number") {
       count = rpc1.data;
     } else {
@@ -54,12 +81,7 @@ export async function POST(req: Request) {
       if (!rpc2.error && typeof rpc2.data === "number") {
         count = rpc2.data;
       } else {
-        const rpc3 = await supabase.rpc("increment_profile_views", { profile_slug: "main" });
-        if (!rpc3.error && typeof rpc3.data === "number") {
-          count = rpc3.data;
-        } else {
-          console.warn("RPC increment_profile_views error:", rpc1.error?.message || rpc2.error?.message);
-        }
+        console.warn("RPC increment_profile_views error:", rpc1.error?.message || rpc2.error?.message);
       }
     }
 
@@ -152,7 +174,6 @@ export async function PATCH(req: Request) {
     }
 
     if (newCount === 0) {
-      clearAnalyticsLogs();
       try {
         await supabase.from("profile_views_log").delete().eq("profile_id", "main");
       } catch {

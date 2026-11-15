@@ -26,12 +26,13 @@ Türkçe arayüzlü, herkese açık tek kişilik bio profili ve sahibine özel y
    ```text
    NEXT_PUBLIC_SUPABASE_URL=https://proje-kimligi.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+   ANALYTICS_IP_SALT=uzun-rastgele-bir-metin
    DISCORD_CLIENT_ID=
    DISCORD_CLIENT_SECRET=
    DISCORD_REDIRECT_URI=http://localhost:3000/api/discord/callback
    ```
 
-   Service-role anahtarını bu değişkene veya tarayıcıya koyma. Kod, profil ve depolama değişikliklerini Supabase RLS politikalarıyla sınırlar.
+   Service-role anahtarını bu değişkene veya tarayıcıya koyma. Kod, profil ve depolama değişikliklerini Supabase RLS politikalarıyla sınırlar. `ANALYTICS_IP_SALT` yalnızca sunucuda kullanılır; 24 saatlik tekil ziyaretçi sayımında IP adreslerini SHA-256 ile tuzlayarak saklar. Boş bırakılırsa tuzsuz hash kullanılır, bu yüzden canlıda rastgele ve uzun bir değer tanımla.
 
 7. Discord hesabını bağlamak istiyorsan Discord Developer Portal'da bir uygulama oluştur. OAuth2 Redirects listesine `.env.local` içindeki `DISCORD_REDIRECT_URI` adresini eksiksiz ekle; istemci kimliği ve istemci sırrını ilgili değişkenlere yaz. Bu site yalnızca `identify` iznini ister: bot, sunucu erişimi veya çevrimiçi durumu kullanılmaz. Discord bağlantısı, herkese açık profilde Discord kullanıcı adı/avatarlı profil bağlantısı gösterir. Yalnızca videolu profil için bu adımı atlayabilirsin.
 
@@ -47,7 +48,7 @@ Türkçe arayüzlü, herkese açık tek kişilik bio profili ve sahibine özel y
 ## Ücretsiz yayınlama
 
 1. Projeyi kendi GitHub hesabındaki bir depoya koy ve Vercel'de ücretsiz Hobby hesabıyla bu depoyu içe aktar.
-2. Vercel proje ayarlarında `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` ortam değişkenlerini tanımla. Discord hesabı bağlantısını kullanacaksan ayrıca `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` ve canlı sitenin `https://alan-adin/api/discord/callback` adresini gösteren `DISCORD_REDIRECT_URI` değerlerini ekle; aynı geri dönüş adresini Discord Developer Portal'a da yaz.
+2. Vercel proje ayarlarında `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` ve `ANALYTICS_IP_SALT` ortam değişkenlerini tanımla. Discord hesabı bağlantısını kullanacaksan ayrıca `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` ve canlı sitenin `https://alan-adin/api/discord/callback` adresini gösteren `DISCORD_REDIRECT_URI` değerlerini ekle; aynı geri dönüş adresini Discord Developer Portal'a da yaz.
 3. Deploy et. Vercel ücretsiz bir `vercel.app` alt alan adı sağlar; özel alan adı bu plana dahil değildir ve ücret gerektirebilir.
 
 Supabase Free şu an veritabanı, Auth ve Storage içeriyor, ancak bir hafta etkin olmayan ücretsiz projeleri duraklatabiliyor. Böyle bir durumda profil verisi servis dışı kalabilir; Supabase panelinden projeyi tekrar etkinleştirmek gerekir. Ücretsiz plan şartları ve kotaları sağlayıcılar tarafından değiştirilebilir.
@@ -58,8 +59,11 @@ Supabase Free şu an veritabanı, Auth ve Storage içeriyor, ancak bir hafta etk
 - Profil fotoğrafı ve arka plan görseli (en fazla 5 MB) yükleme
 - İsteğe bağlı MP4/WebM hareketli arka plan videosu (en fazla 20 MB); sessiz, döngülü oynar ve cihazda hareket azaltma tercih edildiğinde durur
 - Sahibin OAuth2 ile Discord hesabını bağlama; kullanıcı adı/avatarını açık profilinde gösterme
-- Vurgu/yüzey rengi seçimi
-- En fazla 12 güvenli HTTP(S) bağlantısı
+- Canlı Discord durumu: çevrimiçi durum, oynanan oyun kartı ve Spotify parçası (dalga çizgili ilerleme çubuğu)
+- Discord rozetleri (otomatik bitmask algılama) ve oyun kataloğu
+- Sahip tarafından düzenlenebilen sosyal ikon dock'u ve güvenli bağlantılar (HTTP/HTTPS ve e-posta)
+- Vurgu/yüzey rengi, video ve kart opaklığı ayarları, 3D eğim efekti
+- 24 saatlik tekil ziyaretçi sayacı ve sahibe özel analitik paneli (cihaz, yönlendiren, ülke, yoğun saat)
 - Sahip girişi, profil yayına alma ve herkese açık sayfa önizlemesi
 
-Discord çevrimiçi durumu, müzik, analitik, şablon pazarı, rozetler ve gelişmiş animasyonlar ilk sürüme dahil değildir. Arka plan videosu Discord'dan bağımsızdır.
+Şablon pazarı ilk sürüme dahil değildir.

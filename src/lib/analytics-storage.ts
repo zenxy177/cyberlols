@@ -1,5 +1,4 @@
-import fs from "fs";
-import path from "path";
+import { createHash } from "node:crypto";
 import { createServerSupabase } from "@/lib/supabase/server";
 
 export type ViewLogEntry = {
@@ -14,7 +13,17 @@ export type ViewLogEntry = {
   referrer: string;
 };
 
-const LOG_FILE_PATH = path.join(process.cwd(), ".analytics-log.json");
+export type VisitDescriptor = {
+  payload: {
+    profile_id: string;
+    device_type: "desktop" | "mobile" | "tablet";
+    browser: string;
+    country_code: string;
+    country_name: string;
+    referrer: string;
+  };
+  ipHash: string | null;
+};
 
 const COUNTRY_MAP: Record<string, { name: string; flag: string }> = {
   TR: { name: "Türkiye", flag: "🇹🇷" },
@@ -28,36 +37,23 @@ const COUNTRY_MAP: Record<string, { name: string; flag: string }> = {
   RU: { name: "Rusya", flag: "🇷🇺" },
 };
 
-function readLocalLogs(): ViewLogEntry[] {
-  try {
-    if (fs.existsSync(LOG_FILE_PATH)) {
-      const content = fs.readFileSync(LOG_FILE_PATH, "utf-8");
-      return JSON.parse(content) as ViewLogEntry[];
-    }
-  } catch {
-    // ignore
+function getClientIp(headers: Headers): string | null {
+  const forwarded = headers.get("x-forwarded-for");
+  if (forwarded) {
+    const first = forwarded.split(",")[0]?.trim();
+    if (first) return first;
   }
-  return [];
+
+  return (
+    headers.get("x-real-ip")?.trim() ||
+    headers.get("cf-connecting-ip")?.trim() ||
+    null
+  );
 }
 
-function writeLocalLogs(logs: ViewLogEntry[]) {
-  try {
-    // Keep max 2000 latest entries
-    const trimmed = logs.slice(-2000);
-    fs.writeFileSync(LOG_FILE_PATH, JSON.stringify(trimmed, null, 2), "utf-8");
-  } catch {
-    // ignore
-  }
-}
-
-export function clearAnalyticsLogs() {
-  try {
-    if (fs.existsSync(LOG_FILE_PATH)) {
-      fs.writeFileSync(LOG_FILE_PATH, "[]", "utf-8");
-    }
-  } catch {
-    // ignore
-  }
+function hashIp(ip: string): string {
+  const salt = process.env.ANALYTICS_IP_SALT ?? "";
+  return createHash("sha256").update(`${salt}:${ip}`).digest("hex");
 }
 
 export function parseUserAgent(ua: string | null): {
@@ -104,7 +100,7 @@ export function parseReferrer(ref: string | null): string {
   }
 }
 
-export async function recordRealVisit(headers: Headers): Promise<ViewLogEntry> {
+export function describeVisit(headers: Headers): VisitDescriptor {
   const ua = headers.get("user-agent");
   const referer = headers.get("referer");
   const countryHeader =
@@ -119,48 +115,26 @@ export async function recordRealVisit(headers: Headers): Promise<ViewLogEntry> {
   const countryCode = countryHeader.toUpperCase();
   const countryInfo = COUNTRY_MAP[countryCode] || { name: countryCode, flag: "🌍" };
 
-  const newEntry: ViewLogEntry = {
-    id: crypto.randomUUID(),
-    profile_id: "main",
-    viewed_at: new Date().toISOString(),
-    device_type: device,
-    browser,
-    country_code: countryCode,
-    country_name: countryInfo.name,
-    flag: countryInfo.flag,
-    referrer: cleanReferrer,
+  const ip = getClientIp(headers);
+  const ipHash = ip ? hashIp(ip) : null;
+
+  return {
+    payload: {
+      profile_id: "main",
+      device_type: device,
+      browser,
+      country_code: countryCode,
+      country_name: countryInfo.name,
+      referrer: cleanReferrer,
+    },
+    ipHash,
   };
-
-  // 1. Try to record in Supabase table
-  try {
-    const supabase = await createServerSupabase();
-    await supabase.from("profile_views_log").insert({
-      id: newEntry.id,
-      profile_id: newEntry.profile_id,
-      viewed_at: newEntry.viewed_at,
-      device_type: newEntry.device_type,
-      browser: newEntry.browser,
-      country_code: newEntry.country_code,
-      country_name: newEntry.country_name,
-      referrer: newEntry.referrer,
-    });
-  } catch {
-    // Supabase table may not exist yet, fallback to local log
-  }
-
-  // 2. Also record in local file storage
-  const currentLogs = readLocalLogs();
-  currentLogs.push(newEntry);
-  writeLocalLogs(currentLogs);
-
-  return newEntry;
 }
 
 export async function getRealAnalytics() {
   let logs: ViewLogEntry[] = [];
   let dbViewsCount: number | null = null;
 
-  // Try Supabase first
   try {
     const supabase = await createServerSupabase();
 
@@ -170,8 +144,11 @@ export async function getRealAnalytics() {
       .eq("id", "main")
       .maybeSingle();
 
-    if (prof && typeof prof.views_count === "number") {
-      dbViewsCount = prof.views_count;
+    if (prof) {
+      const parsed = Number(prof.views_count);
+      if (Number.isFinite(parsed)) {
+        dbViewsCount = parsed;
+      }
     }
 
     const { data, error } = await supabase
@@ -194,15 +171,11 @@ export async function getRealAnalytics() {
       }));
     }
   } catch {
-    // fallback
-  }
-
-  // Fallback to local logs if Supabase table is not populated yet
-  if (logs.length === 0) {
-    logs = readLocalLogs();
+    // Supabase yoksa veya tablo henüz kurulmadıysa boş analitik döner.
   }
 
   const totalViews = dbViewsCount !== null ? dbViewsCount : logs.length;
+  const logTotal = logs.length;
 
   // Day names in Turkish
   const dayNames = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
@@ -217,7 +190,6 @@ export async function getRealAnalytics() {
     const dayName = dayNames[targetDate.getDay()];
     const dateFormatted = `${targetDate.getDate()} ${monthNames[targetDate.getMonth()]}`;
 
-    // Count real visits matching this day
     const matchCount = logs.filter((l) => l.viewed_at.startsWith(dayStr)).length;
 
     return {
@@ -244,19 +216,19 @@ export async function getRealAnalytics() {
       type: "desktop",
       label: "Masaüstü (Desktop)",
       count: deviceCounts.desktop,
-      percentage: totalViews > 0 ? Math.round((deviceCounts.desktop / totalViews) * 100) : 0,
+      percentage: logTotal > 0 ? Math.round((deviceCounts.desktop / logTotal) * 100) : 0,
     },
     {
       type: "mobile",
       label: "Mobil (Smartphone)",
       count: deviceCounts.mobile,
-      percentage: totalViews > 0 ? Math.round((deviceCounts.mobile / totalViews) * 100) : 0,
+      percentage: logTotal > 0 ? Math.round((deviceCounts.mobile / logTotal) * 100) : 0,
     },
     {
       type: "tablet",
       label: "Tablet",
       count: deviceCounts.tablet,
-      percentage: totalViews > 0 ? Math.round((deviceCounts.tablet / totalViews) * 100) : 0,
+      percentage: logTotal > 0 ? Math.round((deviceCounts.tablet / logTotal) * 100) : 0,
     },
   ];
 
@@ -273,7 +245,7 @@ export async function getRealAnalytics() {
     .map(([name, count]) => ({
       name,
       count,
-      percentage: totalViews > 0 ? Math.round((count / totalViews) * 100) : 0,
+      percentage: logTotal > 0 ? Math.round((count / logTotal) * 100) : 0,
     }));
 
   // Countries Breakdown (REAL)
@@ -295,12 +267,12 @@ export async function getRealAnalytics() {
       name: item.name,
       flag: item.flag,
       count: item.count,
-      percentage: totalViews > 0 ? Math.round((item.count / totalViews) * 100) : 0,
+      percentage: logTotal > 0 ? Math.round((item.count / logTotal) * 100) : 0,
     }));
 
   return {
     ok: true,
-    hasRealData: totalViews > 0,
+    hasRealData: totalViews > 0 || logTotal > 0,
     totalViews,
     weeklyViews,
     weeklyTrend,

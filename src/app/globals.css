@@ -3299,7 +3299,7 @@ textarea:focus-visible {
 .guns-profile-card,
 .guns-main-card {
   position: relative;
-  width: min(100%, 460px);
+  width: min(100%, 480px);
   border-radius: 26px;
   background: var(--card-surface-rgba, rgba(14, 16, 24, 0.68));
   backdrop-filter: blur(28px) saturate(180%);
@@ -3312,6 +3312,22 @@ textarea:focus-visible {
   will-change: transform;
   overflow: hidden;
   margin: 0 auto;
+}
+
+/* Kullanıcı opaklığı ne olursa olsun metin kontrastını koruyan iç katman */
+.guns-main-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(7, 8, 13, var(--card-scrim-alpha, 0.28)) 0%,
+    rgba(7, 8, 13, calc(var(--card-scrim-alpha, 0.28) * 0.72)) 45%,
+    rgba(7, 8, 13, var(--card-scrim-alpha, 0.28)) 100%
+  );
 }
 
 .guns-card-glare {
@@ -3401,20 +3417,22 @@ textarea:focus-visible {
 
 .guns-card-name {
   margin: 0;
-  font-size: clamp(22px, 3.2vh, 28px);
+  font-size: clamp(24px, 3.4vh, 30px);
   font-weight: 800;
   letter-spacing: -0.03em;
   color: #ffffff;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.25);
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.25), 0 1px 12px rgba(0, 0, 0, 0.45);
   overflow-wrap: anywhere;
 }
 
 .guns-card-headline {
   margin: 0;
-  font-size: 13px;
-  font-weight: 550;
-  color: #9aa5b8;
-  letter-spacing: 0.02em;
+  font-size: 14px;
+  font-weight: 500;
+  color: #dbe4f0;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
 }
 
 /* Typewriter Bio */
@@ -3430,9 +3448,10 @@ textarea:focus-visible {
   min-height: 24px;
   max-width: 90%;
   font-family: var(--mono);
-  font-size: 13px;
-  color: #cdd6e5;
-  line-height: 1.5;
+  font-size: 14px;
+  color: #e4ebf6;
+  line-height: 1.55;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
 }
 
 .guns-typewriter-text {
@@ -3460,13 +3479,14 @@ textarea:focus-visible {
   align-items: center;
   gap: 5px;
   font-family: var(--mono);
-  font-size: 11px;
-  color: #7b8598;
+  font-size: 12px;
+  color: #b8c3d3;
   margin-top: 2px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
 }
 
 .guns-location-icon {
-  color: #ef6048;
+  color: var(--accent, #78a7ff);
 }
 
 /* Discord Presence */
@@ -4367,7 +4387,8 @@ textarea:focus-visible {
 @media (max-width: 640px) {
   .guns-top-bar {
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 8px;
+    margin-bottom: 8px;
   }
 
   .guns-top-bar-center {
@@ -4380,6 +4401,17 @@ textarea:focus-visible {
     width: 100%;
     max-width: 100%;
     justify-content: space-between;
+    gap: 8px;
+    padding: 5px 10px;
+  }
+
+  .guns-audio-info {
+    min-width: 84px;
+    max-width: none;
+  }
+
+  .guns-audio-volume-slider {
+    width: 40px;
   }
 
   .guns-profile-card {
@@ -4394,6 +4426,28 @@ textarea:focus-visible {
 @media (pointer: coarse) {
   .guns-custom-cursor-container {
     display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guns-card-avatar-glow,
+  .guns-avatar-lunar-ring,
+  .click-to-enter-content,
+  .guns-typewriter-cursor,
+  .guns-audio-visualizer .visualizer-bar,
+  .spotify-wave-bar {
+    animation: none !important;
+  }
+
+  .guns-lunar-canvas,
+  .guns-custom-cursor-container {
+    display: none !important;
+  }
+
+  .guns-stage-wrapper,
+  .guns-social-badge,
+  .guns-card-glare {
+    transition: none !important;
   }
 }
 
