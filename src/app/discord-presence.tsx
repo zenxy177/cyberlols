@@ -45,6 +45,7 @@ export type PresenceActivity = {
     large_text?: string;
     small_image?: string;
     small_text?: string;
+    application_icon_url?: string;
   };
 };
 
@@ -1186,11 +1187,25 @@ export function resolveActivityAssetUrl(
 
   if (applicationId) {
     const hasExt = /\.(png|jpe?g|webp|gif)$/i.test(assetKey);
-    const suffix = hasExt ? "" : ".webp";
+    const suffix = hasExt ? "" : ".png";
     return `https://cdn.discordapp.com/app-assets/${applicationId}/${assetKey}${suffix}?size=${size}`;
   }
 
   return null;
+}
+
+export function getActivityImageCandidates(
+  activity: PresenceActivity,
+  size: number = 256,
+): string[] {
+  const candidates = [
+    resolveActivityAssetUrl(activity.application_id, activity.assets?.large_image, size),
+    activity.assets?.application_icon_url || null,
+    resolveActivityAssetUrl(activity.application_id, activity.assets?.small_image, size),
+  ];
+  return candidates.filter(
+    (url, index): url is string => Boolean(url) && candidates.indexOf(url) === index,
+  );
 }
 
 function MiniGameThumbnail({
@@ -1198,32 +1213,23 @@ function MiniGameThumbnail({
 }: {
   activity: PresenceActivity;
 }) {
-  const [imgFailed, setImgFailed] = useState(false);
   const known = getKnownGame(activity.name, activity.application_id);
-
-  const largeUrl = resolveActivityAssetUrl(
-    activity.application_id,
-    activity.assets?.large_image,
-    64,
-  );
-  const smallUrl = resolveActivityAssetUrl(
-    activity.application_id,
-    activity.assets?.small_image,
-    64,
-  );
-  const imgUrl = largeUrl || smallUrl;
+  const candidates = getActivityImageCandidates(activity, 64);
+  const candidateKey = candidates.join("|");
+  const [imgIndex, setImgIndex] = useState(0);
+  const imgUrl = candidates[imgIndex] ?? null;
 
   useEffect(() => {
-    setImgFailed(false);
-  }, [imgUrl, activity.id, activity.name]);
+    setImgIndex(0);
+  }, [candidateKey, activity.id, activity.name]);
 
-  if (imgUrl && !imgFailed) {
+  if (imgUrl) {
     return (
       <img
         src={imgUrl}
         alt={activity.name}
         className="guns-discord-game-pill-icon"
-        onError={() => setImgFailed(true)}
+        onError={() => setImgIndex((index) => index + 1)}
       />
     );
   }
@@ -1288,7 +1294,6 @@ function MiniGamePlaytime({ start }: { start?: number }) {
 }
 
 export function GameCard({ game }: { game: PresenceActivity }) {
-  const [imgFailed, setImgFailed] = useState(false);
   const [smallFailed, setSmallFailed] = useState(false);
   const [now, setNow] = useState(Date.now());
 
@@ -1321,13 +1326,16 @@ export function GameCard({ game }: { game: PresenceActivity }) {
     game.assets?.small_image,
     128,
   );
+  const imageCandidates = getActivityImageCandidates(game, 256);
+  const candidateKey = imageCandidates.join("|");
+  const [imgIndex, setImgIndex] = useState(0);
 
-  const primaryImgUrl = largeImgUrl || smallImgUrl;
+  const primaryImgUrl = imageCandidates[imgIndex] ?? null;
   const secondaryImgUrl = largeImgUrl ? smallImgUrl : null;
 
   useEffect(() => {
-    setImgFailed(false);
-  }, [primaryImgUrl, game.id, game.name]);
+    setImgIndex(0);
+  }, [candidateKey, game.id, game.name]);
 
   useEffect(() => {
     setSmallFailed(false);
@@ -1377,13 +1385,13 @@ export function GameCard({ game }: { game: PresenceActivity }) {
       <div className="guns-game-body">
         <div className="guns-game-art-wrap">
           <div className="guns-game-art-container">
-            {primaryImgUrl && !imgFailed ? (
+            {primaryImgUrl ? (
               <img
                 src={primaryImgUrl}
                 alt={game.assets?.large_text || game.name}
                 title={game.assets?.large_text || game.name}
                 className="guns-game-art"
-                onError={() => setImgFailed(true)}
+                onError={() => setImgIndex((index) => index + 1)}
               />
             ) : known ? (
               <div

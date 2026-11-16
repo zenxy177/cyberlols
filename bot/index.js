@@ -56,7 +56,74 @@ function toNumber(value) {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
+const appIconCache = new Map();
+const appIconRequests = new Map();
+const APP_ICON_TTL = 60 * 60 * 1000;
+
+function cachedApplicationIcon(applicationId) {
+  if (!applicationId) return null;
+  const entry = appIconCache.get(applicationId);
+  if (!entry) return null;
+  if (Date.now() - entry.fetchedAt > APP_ICON_TTL) {
+    appIconCache.delete(applicationId);
+    return null;
+  }
+  return entry.iconUrl;
+}
+
+function warmApplicationIcon(applicationId) {
+  if (!applicationId || !client || !client.isReady()) return Promise.resolve(false);
+  const cached = appIconCache.get(applicationId);
+  if (cached && Date.now() - cached.fetchedAt <= APP_ICON_TTL) return Promise.resolve(false);
+  if (appIconRequests.has(applicationId)) return appIconRequests.get(applicationId);
+
+  const request = client.rest
+    .get(`/applications/${applicationId}/rpc`)
+    .then((application) => {
+      const icon = application?.icon;
+      appIconCache.set(applicationId, {
+        iconUrl: icon
+          ? `https://cdn.discordapp.com/app-icons/${applicationId}/${icon}.png?size=128`
+          : null,
+        fetchedAt: Date.now(),
+      });
+      return Boolean(icon);
+    })
+    .catch(() => {
+      appIconCache.set(applicationId, { iconUrl: null, fetchedAt: Date.now() });
+      return false;
+    })
+    .finally(() => {
+      appIconRequests.delete(applicationId);
+    });
+
+  appIconRequests.set(applicationId, request);
+  return request;
+}
+
+function warmActivityIcons(activities) {
+  if (!activities || activities.length === 0) return;
+  for (const activity of activities) {
+    if (!activity?.applicationId) continue;
+    warmApplicationIcon(activity.applicationId).then((added) => {
+      if (added) publish(true);
+    });
+  }
+}
+
 function mapActivity(activity) {
+  const appIconUrl = cachedApplicationIcon(activity.applicationId);
+  const assets =
+    activity.assets || appIconUrl
+      ? {
+          large_image: activity.assets?.largeImage || undefined,
+          large_text: activity.assets?.largeText || undefined,
+          small_image: activity.assets?.smallImage || undefined,
+          small_text: activity.assets?.smallText || undefined,
+          application_icon_url: appIconUrl || undefined,
+        }
+      : undefined;
+
   return {
     id: activity.applicationId || activity.name,
     name: activity.name,
@@ -70,14 +137,7 @@ function mapActivity(activity) {
           end: toNumber(activity.timestamps.end?.getTime?.()),
         }
       : undefined,
-    assets: activity.assets
-      ? {
-          large_image: activity.assets.largeImage || undefined,
-          large_text: activity.assets.largeText || undefined,
-          small_image: activity.assets.smallImage || undefined,
-          small_text: activity.assets.smallText || undefined,
-        }
-      : undefined,
+    assets,
   };
 }
 
@@ -145,6 +205,7 @@ function buildPresence() {
   }
 
   const { member, presence } = findPresenceEntry();
+  warmActivityIcons(presence?.activities);
   const user = member?.user || targetUser;
   const activities = presence?.activities?.map(mapActivity) || [];
   const spotifyActivity = presence?.activities?.find(

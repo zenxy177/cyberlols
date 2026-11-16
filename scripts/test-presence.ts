@@ -67,7 +67,7 @@ assert.strictEqual(
 // Application asset without extension
 assert.strictEqual(
   resolveActivityAssetUrl("700136079562375218", "ascent_splash", 256),
-  "https://cdn.discordapp.com/app-assets/700136079562375218/ascent_splash.webp?size=256",
+  "https://cdn.discordapp.com/app-assets/700136079562375218/ascent_splash.png?size=256",
 );
 
 // Application asset with extension already
