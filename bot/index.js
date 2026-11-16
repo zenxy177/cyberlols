@@ -198,7 +198,44 @@ function sendJson(res, status, body) {
   res.end(payload);
 }
 
-const server = http.createServer((req, res) => {
+async function collectDiagnostics() {
+  const guilds = Array.from(client?.guilds.cache.values() || []);
+  const entries = [];
+  let targetFound = false;
+
+  for (const guild of guilds) {
+    let member = guild.members.cache.get(TARGET_USER_ID) || null;
+    if (!member) {
+      try {
+        member = await guild.members.fetch({ user: TARGET_USER_ID, force: true });
+      } catch {
+        member = null;
+      }
+    }
+    const presence = guild.presences.cache.get(TARGET_USER_ID) || null;
+    if (member) targetFound = true;
+    entries.push({
+      id: guild.id,
+      name: guild.name,
+      target_is_member: Boolean(member),
+      target_status: presence?.status ?? null,
+    });
+  }
+
+  return {
+    ready: Boolean(client?.isReady()),
+    guild_id_env: GUILD_ID || null,
+    target_user_id: TARGET_USER_ID,
+    guild_count: guilds.length,
+    target_found: targetFound,
+    presences_intent: client
+      ? (client.options.intents.bitfield & GatewayIntentBits.GuildPresences) !== 0
+      : false,
+    guilds: entries,
+  };
+}
+
+const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
 
   if (url.pathname === "/health" && req.method === "GET") {
@@ -207,8 +244,26 @@ const server = http.createServer((req, res) => {
       mock: MOCK,
       connected: MOCK || Boolean(client && client.isReady()),
       target_user_id: TARGET_USER_ID || null,
+      guild_count: client?.guilds.cache.size ?? 0,
       updated_at: new Date(lastPublishedAt || Date.now()).toISOString(),
     });
+    return;
+  }
+
+  if (url.pathname === "/debug" && req.method === "GET") {
+    if (!isAuthorized(req, url)) {
+      sendJson(res, 401, { success: false, error: "unauthorized" });
+      return;
+    }
+    if (!client || !client.isReady()) {
+      sendJson(res, 503, { success: false, error: "bot_not_ready" });
+      return;
+    }
+    try {
+      sendJson(res, 200, await collectDiagnostics());
+    } catch (error) {
+      sendJson(res, 500, { success: false, error: error.message });
+    }
     return;
   }
 
@@ -285,6 +340,9 @@ async function startDiscord() {
 
   client.once("ready", async () => {
     console.log(`Discord connected as ${client.user?.tag} (${client.user?.id})`);
+    const guildList =
+      client.guilds.cache.map((guild) => `${guild.name} (${guild.id})`).join(", ") || "yok";
+    console.log(`Bot ${client.guilds.cache.size} sunucuda: ${guildList}`);
     try {
       targetUser = await client.users.fetch(TARGET_USER_ID, { force: true });
     } catch (error) {
@@ -295,11 +353,25 @@ async function startDiscord() {
     } catch (error) {
       console.warn("Ham kullanıcı verisi alınamadı:", error.message);
     }
+    try {
+      const diag = await collectDiagnostics();
+      const summary = diag.guilds
+        .map((guild) => `${guild.name}: üye=${guild.target_is_member}, durum=${guild.target_status ?? "-"}`)
+        .join(" | ");
+      console.log(
+        `Hedef kullanıcı ${diag.target_found ? "bulundu" : "HİÇBİR SUNUCUDA BULUNAMADI"}${summary ? ` → ${summary}` : ""}`,
+      );
+    } catch (error) {
+      console.warn("Teşhis alınamadı:", error.message);
+    }
     publish(true);
   });
 
   client.on("presenceUpdate", (_oldPresence, newPresence) => {
-    if (newPresence.userId === TARGET_USER_ID) publish();
+    if (newPresence.userId === TARGET_USER_ID) {
+      console.log(`presenceUpdate: ${newPresence.status}`);
+      publish();
+    }
   });
 
   client.on("userUpdate", (_oldUser, newUser) => {

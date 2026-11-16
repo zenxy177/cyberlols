@@ -37,10 +37,12 @@ Wispbyte panelinde dosya yükleme/ Git deploy seçeneklerinden biriyle `bot/` i�
 
 - `GET /health` — anahtarsız durum kontrolü.
 - `GET /presence` — `x-api-key` başlığı (veya `?key=`) ile Lanyard uyumlu JSON.
+- `GET /debug` — `x-api-key` başlığı (veya `?key=`) ile teşhis: botun sunucuları, hedefin üyeliği ve presence durumu.
 - `GET /ws` — WebSocket; bağlantıda ve her değişiklikte aynı JSON paketini gönderir. Anahtar `?key=` ile verilir.
 
 ```bash
 curl -H "x-api-key: $PRESENCE_API_KEY" http://localhost:3001/presence
+curl -H "x-api-key: $PRESENCE_API_KEY" http://localhost:3001/debug
 curl http://localhost:3001/health
 ```
 
