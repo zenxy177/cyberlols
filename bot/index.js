@@ -11,7 +11,13 @@ const PORT = Number(process.env.PORT || process.env.SERVER_PORT || 3001);
 const HOST = process.env.HOST || "0.0.0.0";
 const API_KEY = (process.env.PRESENCE_API_KEY || "").trim();
 const TARGET_USER_ID = (process.env.TARGET_USER_ID || "").trim();
-const GUILD_ID = (process.env.GUILD_ID || "").trim();
+const GUILD_ID_RAW = (process.env.GUILD_ID || "").trim();
+const GUILD_ID = /^\d{17,20}$/.test(GUILD_ID_RAW) ? GUILD_ID_RAW : "";
+if (GUILD_ID_RAW && !GUILD_ID) {
+  console.warn(
+    `GUILD_ID geçersiz ("${GUILD_ID_RAW}"); yok sayılıp tüm sunucular taranacak.`,
+  );
+}
 const DISCORD_TOKEN = (process.env.DISCORD_TOKEN || "").trim();
 const MOCK = /^(1|true|yes)$/i.test(process.env.MOCK_PRESENCE || "");
 
