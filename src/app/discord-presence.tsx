@@ -17,7 +17,7 @@ type DiscordPresenceProps = {
   badgeMode?: DiscordBadgeMode;
 };
 
-export type LanyardSpotify = {
+export type PresenceSpotify = {
   track_id?: string | null;
   timestamps?: {
     start: number;
@@ -29,7 +29,7 @@ export type LanyardSpotify = {
   album_art_url?: string | null;
 };
 
-export type LanyardActivity = {
+export type PresenceActivity = {
   id: string;
   name: string;
   type: number;
@@ -48,7 +48,7 @@ export type LanyardActivity = {
   };
 };
 
-export type LanyardData = {
+export type PresenceData = {
   discord_user: {
     id: string;
     username: string;
@@ -60,9 +60,9 @@ export type LanyardData = {
     premium_type?: number;
   };
   discord_status: "online" | "idle" | "dnd" | "offline";
-  activities: LanyardActivity[];
+  activities: PresenceActivity[];
   listening_to_spotify: boolean;
-  spotify: LanyardSpotify | null;
+  spotify: PresenceSpotify | null;
 };
 
 export type KnownGame = {
@@ -1096,8 +1096,8 @@ export function getKnownGame(
 }
 
 export function findPrimaryGameActivity(
-  activities?: LanyardActivity[],
-): LanyardActivity | null {
+  activities?: PresenceActivity[],
+): PresenceActivity | null {
   if (!activities || !Array.isArray(activities) || activities.length === 0) {
     return null;
   }
@@ -1196,7 +1196,7 @@ export function resolveActivityAssetUrl(
 function MiniGameThumbnail({
   activity,
 }: {
-  activity: LanyardActivity;
+  activity: PresenceActivity;
 }) {
   const [imgFailed, setImgFailed] = useState(false);
   const known = getKnownGame(activity.name, activity.application_id);
@@ -1287,7 +1287,7 @@ function MiniGamePlaytime({ start }: { start?: number }) {
   );
 }
 
-export function GameCard({ game }: { game: LanyardActivity }) {
+export function GameCard({ game }: { game: PresenceActivity }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [smallFailed, setSmallFailed] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -1506,7 +1506,7 @@ function SpotifyIcon({ size = 15 }: { size?: number }) {
 
 const SPOTIFY_WAVEFORM_BARS = 36;
 
-function SpotifyCard({ spotify }: { spotify: LanyardSpotify }) {
+function SpotifyCard({ spotify }: { spotify: PresenceSpotify }) {
   const [currentMs, setCurrentMs] = useState(0);
 
   const rawStart = spotify.timestamps?.start ?? 0;
@@ -1658,135 +1658,98 @@ export function DiscordPresence({
   customBadges,
   badgeMode = "auto",
 }: DiscordPresenceProps) {
-  const [data, setData] = useState<LanyardData | null>(null);
+  const [data, setData] = useState<PresenceData | null>(null);
 
   useEffect(() => {
     if (!discordUserId) return;
 
-    let ws: WebSocket | null = null;
-    let heartbeatInterval: NodeJS.Timeout | null = null;
-    let reconnectTimer: NodeJS.Timeout | null = null;
-    let reconnectAttempts = 0;
     let disposed = false;
+    let source: EventSource | null = null;
+    let pollTimer: number | null = null;
+    let failures = 0;
 
-    // Fetch initial REST data first for fast render
-    fetch(`https://api.lanyard.rest/v1/users/${discordUserId}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success && json.data) {
-          setData(json.data);
-        }
-      })
-      .catch((err) => {
-        console.warn("Lanyard REST fetch failed, using fallback:", err);
-      });
-
-    function clearHeartbeat() {
-      if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-        heartbeatInterval = null;
-      }
+    function applyPayload(payload: unknown) {
+      if (!payload || typeof payload !== "object") return;
+      const packet = payload as { success?: boolean; data?: PresenceData };
+      if (packet.success && packet.data) setData(packet.data);
     }
 
-    function closeSocket() {
-      clearHeartbeat();
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
-        reconnectTimer = null;
-      }
-      if (ws) {
-        ws.onclose = null;
-        try {
-          ws.close();
-        } catch {
-          // ignore
-        }
-        ws = null;
-      }
-    }
-
-    function connect() {
+    function loadSnapshot() {
       if (disposed || document.hidden) return;
-      closeSocket();
+      fetch("/api/presence", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then(applyPayload)
+        .catch(() => {});
+    }
 
-      // Connect WebSocket for live real-time updates
-      try {
-        ws = new WebSocket("wss://api.lanyard.rest/socket");
-      } catch {
+    function stopPolling() {
+      if (pollTimer !== null) {
+        window.clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    function startPolling() {
+      if (disposed || pollTimer !== null) return;
+      loadSnapshot();
+      pollTimer = window.setInterval(loadSnapshot, 15_000);
+    }
+
+    function closeStream() {
+      if (source) {
+        source.close();
+        source = null;
+      }
+    }
+
+    function startStream() {
+      if (disposed || document.hidden) return;
+      closeStream();
+
+      if (typeof EventSource === "undefined") {
+        startPolling();
         return;
       }
 
-      ws.onopen = () => {
-        reconnectAttempts = 0;
-      };
-
-      ws.onmessage = (event) => {
+      source = new EventSource("/api/presence/stream");
+      source.onmessage = (event) => {
+        failures = 0;
         try {
-          const packet = JSON.parse(event.data);
-          // Opcode 1: Hello (contains heartbeat interval)
-          if (packet.op === 1) {
-            clearHeartbeat();
-            const interval = packet.d.heartbeat_interval;
-            heartbeatInterval = setInterval(() => {
-              if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ op: 3 }));
-              }
-            }, interval);
-
-            // Opcode 2: Initialize subscription
-            if (ws && ws.readyState === WebSocket.OPEN) {
-              ws.send(
-                JSON.stringify({
-                  op: 2,
-                  d: {
-                    subscribe_to_id: discordUserId,
-                  },
-                }),
-              );
-            }
-          }
-
-          // Opcode 0: Event dispatch
-          if (packet.op === 0) {
-            if (packet.t === "INIT_STATE" || packet.t === "PRESENCE_UPDATE") {
-              setData(packet.d);
-            }
-          }
-        } catch (e) {
-          console.warn("Error parsing Lanyard WS message:", e);
+          applyPayload(JSON.parse(event.data));
+        } catch {
+          // bozuk çerçeveyi yoksay
         }
       };
-
-      // Bağlantı kopunca üstel geri çekilmeyle yeniden bağlan (en fazla 5 deneme)
-      ws.onclose = () => {
-        clearHeartbeat();
-        if (disposed || document.hidden || reconnectAttempts >= 5) return;
-        const delay = Math.min(30_000, 1_000 * 2 ** reconnectAttempts);
-        reconnectAttempts++;
-        reconnectTimer = setTimeout(connect, delay);
-      };
-
-      ws.onerror = () => {
-        // onclose yeniden bağlanmayı yönetir; burada sessiz kal.
+      source.onerror = () => {
+        failures += 1;
+        // EventSource kendi yeniden dener; 3 üst üste hatada polling'e geç.
+        if (failures >= 3) {
+          closeStream();
+          startPolling();
+        }
       };
     }
 
     function handleVisibilityChange() {
       if (document.hidden) {
-        closeSocket();
-      } else {
-        reconnectAttempts = 0;
-        connect();
+        closeStream();
+        stopPolling();
+        return;
       }
+      failures = 0;
+      loadSnapshot();
+      startStream();
     }
 
-    connect();
+    loadSnapshot();
+    startStream();
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       disposed = true;
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      closeSocket();
+      closeStream();
+      stopPolling();
     };
   }, [discordUserId]);
 
@@ -1800,14 +1763,14 @@ export function DiscordPresence({
 
   const status = data?.discord_status || "offline";
 
-  // Build avatar URL (Lanyard dynamic avatar or fallback)
+  // Build avatar URL (presence avatar or fallback)
   const avatarUrl = data?.discord_user?.avatar
     ? `https://cdn.discordapp.com/avatars/${discordUserId}/${data.discord_user.avatar}.${
         data.discord_user.avatar.startsWith("a_") ? "gif" : "webp"
       }?size=128`
     : fallbackAvatarUrl;
 
-  // Resolve Discord Badges (Lanyard public_flags + Nitro + custom settings)
+  // Resolve Discord Badges (presence public_flags + Nitro + custom settings)
   const badges = resolveDiscordBadges({
     publicFlags: data?.discord_user?.public_flags ?? data?.discord_user?.flags,
     avatar: data?.discord_user?.avatar,

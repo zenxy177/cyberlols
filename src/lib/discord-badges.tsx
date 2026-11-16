@@ -234,7 +234,7 @@ export function resolveDiscordBadges({
   }
 
   // Default "auto": if auto badges found, return them.
-  // If no auto badges are detected (e.g. user not on Lanyard server or public_flags is 0)
+  // If no auto badges are detected (e.g. bot offline or public_flags is 0)
   // but user provided customBadges, fallback to customBadges so profile isn't blank.
   if (autoBadges.length > 0) {
     return sortBadges(autoBadges);

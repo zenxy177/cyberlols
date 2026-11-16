@@ -9,7 +9,7 @@ import {
   formatElapsed,
   formatElapsedHuman,
   formatTime,
-  type LanyardActivity,
+  type PresenceActivity,
 } from "../src/app/discord-presence";
 import {
   resolveDiscordBadges,
@@ -391,14 +391,14 @@ assert.strictEqual(findPrimaryGameActivity(), null);
 assert.strictEqual(findPrimaryGameActivity([]), null);
 
 // Skips custom status (type 4) and spotify (type 2)
-const nonGames: LanyardActivity[] = [
+const nonGames: PresenceActivity[] = [
   { id: "custom", name: "Custom Status", type: 4, state: "Chilling" },
   { id: "spotify:1", name: "Spotify", type: 2 },
 ];
 assert.strictEqual(findPrimaryGameActivity(nonGames), null);
 
 // Single game
-const valActivity: LanyardActivity = {
+const valActivity: PresenceActivity = {
   id: "game1",
   name: "VALORANT",
   type: 0,
@@ -409,13 +409,13 @@ const valActivity: LanyardActivity = {
 assert.strictEqual(findPrimaryGameActivity([valActivity]), valActivity);
 
 // Prioritizes recognized game over generic RPC utility
-const vsCodeActivity: LanyardActivity = {
+const vsCodeActivity: PresenceActivity = {
   id: "rpc1",
   name: "Visual Studio Code",
   type: 0,
   details: "Editing file.tsx",
 };
-const mixedActivities: LanyardActivity[] = [
+const mixedActivities: PresenceActivity[] = [
   nonGames[0],
   vsCodeActivity,
   valActivity,
@@ -424,7 +424,7 @@ const chosen = findPrimaryGameActivity(mixedActivities);
 assert.strictEqual(chosen?.name, "VALORANT", "Should prioritize recognized game VALORANT");
 
 // Competing activity (type 5)
-const compActivity: LanyardActivity = {
+const compActivity: PresenceActivity = {
   id: "comp1",
   name: "VALORANT",
   type: 5,

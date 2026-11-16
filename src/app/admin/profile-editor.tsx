@@ -8,7 +8,6 @@ import {
   ChevronUp,
   Compass,
   Copy,
-  ExternalLink,
   Globe,
   Headphones,
   Laptop,
@@ -126,7 +125,7 @@ const PRESET_COLOR_THEMES = [
     name: "Electric Blue",
     accent: "#78a7ff",
     surface: "#0a0d18",
-    description: "Lanyard & Discord mavisi",
+    description: "Discord mavisi",
   },
   {
     name: "Phantom Violet",
@@ -302,7 +301,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
   const audioInput = useRef<HTMLInputElement>(null);
   const testAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const [lanyardData, setLanyardData] = useState<{
+  const [presenceData, setPresenceData] = useState<{
     status: "idle" | "loading" | "monitored" | "not_monitored";
     details?: string;
     spotify?: {
@@ -408,21 +407,27 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Fetch Lanyard presence status
+  // Presence botu durumunu al
   useEffect(() => {
     if (!form.discord_user_id) {
-      setLanyardData({ status: "idle", detectedBadges: [] });
+      setPresenceData({ status: "idle", detectedBadges: [] });
       return;
     }
 
     let isMounted = true;
-    setLanyardData((prev) => ({ ...prev, status: "loading" }));
+    setPresenceData((prev) => ({ ...prev, status: "loading" }));
 
-    fetch(`https://api.lanyard.rest/v1/users/${form.discord_user_id}`)
-      .then((res) => res.json())
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 8000);
+
+    fetch("/api/presence", { cache: "no-store", signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
       .then((payload) => {
         if (!isMounted) return;
-        if (payload.success && payload.data) {
+        if (payload?.success && payload.data) {
           const d = payload.data;
           const statusText =
             d.discord_status === "online"
@@ -451,32 +456,42 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             badgeMode: "auto",
           });
 
-          setLanyardData({
+          setPresenceData({
             status: "monitored",
             details,
             spotify: spotifyInfo,
             detectedBadges,
           });
-        } else {
-          setLanyardData({
+        } else if (payload) {
+          setPresenceData({
             status: "not_monitored",
-            details: "Lanyard sunucusuna katılmadı (discord.gg/lanyard)",
+            details: "Presence botu veri döndürmedi",
+            detectedBadges: [],
+          });
+        } else {
+          setPresenceData({
+            status: "not_monitored",
+            details:
+              "Presence botu bağlı değil (PRESENCE_API_URL / PRESENCE_API_KEY)",
             detectedBadges: [],
           });
         }
       })
       .catch(() => {
         if (isMounted) {
-          setLanyardData({
+          setPresenceData({
             status: "not_monitored",
-            details: "Lanyard API yanıt vermedi",
+            details: "Presence botuna ulaşılamadı",
             detectedBadges: [],
           });
         }
-      });
+      })
+      .finally(() => window.clearTimeout(timeout));
 
     return () => {
       isMounted = false;
+      window.clearTimeout(timeout);
+      controller.abort();
     };
   }, [form.discord_user_id]);
 
@@ -1210,9 +1225,9 @@ notify pgrst, 'reload schema';`;
             <span className="stat-card-title">Discord & Spotify</span>
             <div
               className={`stat-status-dot ${
-                lanyardData.status === "monitored"
+                presenceData.status === "monitored"
                   ? "is-online"
-                  : lanyardData.status === "loading"
+                  : presenceData.status === "loading"
                     ? "is-loading"
                     : "is-idle"
               }`}
@@ -1220,14 +1235,14 @@ notify pgrst, 'reload schema';`;
           </div>
           <div className="stat-card-body">
             <span className="stat-title-highlight">
-              {lanyardData.status === "monitored"
+              {presenceData.status === "monitored"
                 ? form.discord_global_name || form.discord_username || "Warxy"
                 : form.discord_user_id
-                  ? "Lanyard Bekleniyor"
+                  ? "Bot Bekleniyor"
                   : "Bağlı Değil"}
             </span>
             <span className="stat-subtext truncate">
-              {lanyardData.details || "api.lanyard.rest bağlantısı"}
+              {presenceData.details || "presence botu bağlantısı"}
             </span>
           </div>
         </div>
@@ -1325,7 +1340,7 @@ notify pgrst, 'reload schema';`;
               className={`studio-tab-btn ${activeTab === "discord" ? "is-active" : ""}`}
             >
               <MessageCircle size={15} />
-              <span>Discord Lanyard</span>
+              <span>Discord & Spotify</span>
             </button>
 
             <button
@@ -2183,22 +2198,22 @@ notify pgrst, 'reload schema';`;
               </div>
             ) : null}
 
-            {/* 5. DISCORD LANYARD TAB */}
+            {/* 5. DISCORD PRESENCE TAB */}
             {activeTab === "discord" ? (
               <div className="studio-panel-pane">
                 <div className="pane-header">
-                  <h3>Discord & Lanyard Canlı Entegrasyonu</h3>
+                  <h3>Discord Canlı Entegrasyonu (Kendi Botumuz)</h3>
                   <p>
-                    0 TL Sunucu Masrafı kuralıyla gerçek zamanlı Discord durumu ve Spotify müzik kartı.
+                    Wispbyte üzerinde çalışan kendi botumuzla gerçek zamanlı Discord durumu ve Spotify müzik kartı.
                   </p>
                 </div>
 
-                {/* Lanyard Status Banner */}
+                {/* Presence Bot Status Banner */}
                 <div
                   className={`studio-lanyard-banner ${
-                    lanyardData.status === "monitored"
+                    presenceData.status === "monitored"
                       ? "is-active"
-                      : lanyardData.status === "loading"
+                      : presenceData.status === "loading"
                         ? "is-loading"
                         : "is-warning"
                   }`}
@@ -2220,22 +2235,13 @@ notify pgrst, 'reload schema';`;
                       </span>
                     </div>
                     <p className="lanyard-details-text">
-                      {lanyardData.status === "monitored"
-                        ? `🟢 Lanyard bağlı: ${lanyardData.details}`
-                        : lanyardData.status === "loading"
-                          ? "Lanyard durumu kontrol ediliyor…"
-                          : "⚠️ Canlı durum için hesabının discord.gg/lanyard sunucusunda olması gerekir."}
+                      {presenceData.status === "monitored"
+                        ? `🟢 Bot bağlı: ${presenceData.details}`
+                        : presenceData.status === "loading"
+                          ? "Bot durumu kontrol ediliyor…"
+                          : "⚠️ Presence botu bağlı değil. Botu başlatıp PRESENCE_API_URL / PRESENCE_API_KEY değerlerini kontrol edin."}
                     </p>
                   </div>
-                  <a
-                    href="https://discord.gg/lanyard"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="studio-btn studio-btn-sm studio-btn-secondary"
-                  >
-                    <span>Lanyard Sunucusu</span>
-                    <ExternalLink size={13} />
-                  </a>
                 </div>
 
                 <div className="cyber-fields-grid mt-4">
@@ -2243,7 +2249,7 @@ notify pgrst, 'reload schema';`;
                     <label className="cyber-label">
                       <span>Discord Kullanıcı ID (Snowflake)</span>
                       <span className="field-hint">
-                        Discord ayarlarından Geliştirici Modunu açıp profilinize sağ tıklayarak &quot;Kullanıcı ID&apos;sini Kopyala&quot; deyin.
+                        Discord ayarlarından Geliştirici Modunu açıp profilinize sağ tıklayarak &quot;Kullanıcı ID&apos;sini Kopyala&quot; deyin. Bu ID, botun TARGET_USER_ID değeriyle aynı olmalı.
                       </span>
                     </label>
                     <input
@@ -2306,7 +2312,7 @@ notify pgrst, 'reload schema';`;
                           <span className="discord-mode-dot" />
                         </div>
                         <div className="discord-mode-info">
-                          <strong>⚡ Otomatik Algılama (Lanyard)</strong>
+                          <strong>⚡ Otomatik Algılama (Bot)</strong>
                           <span>Discord profilinizdeki resmi rozetleri ve Nitro durumunu canlı okur.</span>
                         </div>
                       </button>
@@ -2335,19 +2341,19 @@ notify pgrst, 'reload schema';`;
                         </div>
                         <div className="discord-mode-info">
                           <strong>🔗 Birleşik (Otomatik + Özel)</strong>
-                          <span>Hem Lanyard ile algılanan rozetleri hem de seçtiklerinizi birleştirir.</span>
+                          <span>Hem bot ile algılanan rozetleri hem de seçtiklerinizi birleştirir.</span>
                         </div>
                       </button>
                     </div>
                   </div>
 
-                  {/* Lanyard Detected Box */}
-                  {lanyardData.status === "monitored" ? (
+                  {/* Bot Detected Box */}
+                  {presenceData.status === "monitored" ? (
                     <div className="lanyard-detected-box mt-4">
-                      <span className="lanyard-detected-label">Canlı Lanyard Tespiti:</span>
-                      {lanyardData.detectedBadges && lanyardData.detectedBadges.length > 0 ? (
+                      <span className="lanyard-detected-label">Canlı Bot Tespiti:</span>
+                      {presenceData.detectedBadges && presenceData.detectedBadges.length > 0 ? (
                         <div className="lanyard-detected-chips">
-                          {lanyardData.detectedBadges.map((b) => (
+                          {presenceData.detectedBadges.map((b) => (
                             <span key={b.id} className="lanyard-detected-chip">
                               <DiscordBadgeIcon badgeId={b.id} size={13} />
                               <span>{b.name}</span>
