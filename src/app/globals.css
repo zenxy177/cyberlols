@@ -3419,7 +3419,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 11px 14px;
   border-radius: 16px;
   background: rgba(18, 22, 33, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -3428,6 +3428,7 @@ textarea:focus-visible {
   text-align: left;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
 }
 
 .guns-discord-badge:hover {
@@ -3529,11 +3530,9 @@ textarea:focus-visible {
 .guns-discord-activity {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 11px;
+  gap: 7px;
+  font-size: 12px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   min-width: 0;
 }
 
@@ -3588,12 +3587,15 @@ textarea:focus-visible {
 /* Pill activity with right-side artwork (game logo / Spotify album) */
 .guns-discord-activity.has-art {
   width: 100%;
-  white-space: normal;
+  align-items: center;
 }
 
 .guns-discord-activity.has-art .guns-discord-activity-text {
   white-space: nowrap;
-  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
 .guns-discord-activity.has-art .guns-discord-activity-text b,
@@ -3604,20 +3606,20 @@ textarea:focus-visible {
 
 .guns-discord-activity-gap {
   flex: 1;
-  min-width: 6px;
+  min-width: 8px;
 }
 
 .guns-discord-activity-lines {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
-  flex-shrink: 1;
-  line-height: 1.3;
+  flex: 1;
+  line-height: 1.35;
 }
 
 .guns-discord-activity-listen {
-  font-size: 11px;
+  font-size: 12px;
   color: #1ed760;
   white-space: nowrap;
   overflow: hidden;
@@ -3626,7 +3628,7 @@ textarea:focus-visible {
 
 .guns-discord-activity-by {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 10px;
   color: #7b8599;
   white-space: nowrap;
   overflow: hidden;
@@ -3634,29 +3636,29 @@ textarea:focus-visible {
 }
 
 .guns-discord-activity.has-art .guns-discord-game-pill-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 9px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .guns-discord-activity.has-art .guns-discord-game-pill-vector {
-  width: 40px;
-  height: 40px;
-  border-radius: 9px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
 }
 
 .guns-discord-activity.has-art .guns-discord-game-pill-monogram {
-  min-width: 40px;
-  height: 40px;
-  border-radius: 9px;
-  font-size: 11px;
+  min-width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  font-size: 12px;
 }
 
 .guns-discord-spotify-art {
-  width: 40px;
-  height: 40px;
-  border-radius: 9px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
