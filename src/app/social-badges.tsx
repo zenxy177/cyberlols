@@ -263,8 +263,8 @@ function detectPlatform(url: string, label: string): PlatformInfo {
 export function SocialBadges({ links, layout = "dock" }: SocialBadgesProps) {
   if (!links || links.length === 0) return null;
 
-  // Az sayıda linkte ikon-only dock anlaşılmıyor; etiketli düzen daha net.
-  const isButtons = layout === "buttons" || links.length <= 3;
+  // Kullanıcının seçtiği layout'a saygı duy; link sayısına göre override etme.
+  const isButtons = layout === "buttons";
 
   return (
     <div
