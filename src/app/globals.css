@@ -3417,9 +3417,9 @@ textarea:focus-visible {
 .guns-discord-badge {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
-  padding: 11px 14px;
+  padding: 13px 16px;
   border-radius: 16px;
   background: rgba(18, 22, 33, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -3440,8 +3440,8 @@ textarea:focus-visible {
 
 .guns-discord-avatar-container {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
 }
 
@@ -3499,7 +3499,7 @@ textarea:focus-visible {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 5px;
 }
 
 .guns-discord-name-row {
@@ -3511,7 +3511,7 @@ textarea:focus-visible {
 }
 
 .guns-discord-display-name {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   color: #ffffff;
   overflow: hidden;
@@ -3520,7 +3520,7 @@ textarea:focus-visible {
 }
 
 .guns-discord-username {
-  font-size: 11px;
+  font-size: 12px;
   color: #8b95a8;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3531,7 +3531,7 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
+  font-size: 13px;
   overflow: hidden;
   min-width: 0;
 }
@@ -3619,7 +3619,7 @@ textarea:focus-visible {
 }
 
 .guns-discord-activity-listen {
-  font-size: 12px;
+  font-size: 13px;
   color: #1ed760;
   white-space: nowrap;
   overflow: hidden;
@@ -3628,7 +3628,7 @@ textarea:focus-visible {
 
 .guns-discord-activity-by {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   color: #7b8599;
   white-space: nowrap;
   overflow: hidden;
@@ -3636,28 +3636,28 @@ textarea:focus-visible {
 }
 
 .guns-discord-activity.has-art .guns-discord-game-pill-icon {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .guns-discord-activity.has-art .guns-discord-game-pill-vector {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: 10px;
 }
 
 .guns-discord-activity.has-art .guns-discord-game-pill-monogram {
-  min-width: 48px;
-  height: 48px;
+  min-width: 54px;
+  height: 54px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .guns-discord-spotify-art {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
