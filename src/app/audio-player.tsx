@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
-import { Music, Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 
 type AudioPlayerProps = {
   audioUrl?: string | null;
@@ -12,29 +12,19 @@ type AudioPlayerProps = {
   shouldPlay?: boolean;
 };
 
-function formatTime(seconds: number): string {
-  if (isNaN(seconds) || !isFinite(seconds)) return "0:00";
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-}
-
 export function AudioPlayer({
   audioUrl,
   videoRef,
   title = "Arka Plan Müziği",
-  artist = "",
   defaultVolume = 50,
   shouldPlay = false,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const progressBarRef = useRef<HTMLDivElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [volume, setVolume] = useState(defaultVolume / 100);
   const [isMuted, setIsMuted] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isVideo = Boolean(videoRef && !audioUrl);
@@ -55,32 +45,14 @@ export function AudioPlayer({
         el.volume = initialVol;
       }
       setVolume(initialVol);
-      if (el.duration && !isNaN(el.duration)) {
-        setDuration(el.duration);
-      }
     }
   }, [defaultVolume, isVideo, getMedia]);
 
-  // Synchronize events from media element (especially for external videoRef)
+  // Synchronize mute state from media element (especially for external videoRef)
   useEffect(() => {
     const el = getMedia();
     if (!el) return;
 
-    function onPlay() {
-      setIsPlaying(true);
-    }
-    function onPause() {
-      setIsPlaying(false);
-    }
-    function onEnded() {
-      setIsPlaying(false);
-    }
-    function onTimeUpdate() {
-      if (el) setCurrentTime(el.currentTime);
-    }
-    function onLoadedMetadata() {
-      if (el) setDuration(el.duration);
-    }
     function onVolumeChange() {
       if (el) {
         setVolume(el.volume);
@@ -88,23 +60,10 @@ export function AudioPlayer({
       }
     }
 
-    el.addEventListener("play", onPlay);
-    el.addEventListener("pause", onPause);
-    el.addEventListener("ended", onEnded);
-    el.addEventListener("timeupdate", onTimeUpdate);
-    el.addEventListener("loadedmetadata", onLoadedMetadata);
     el.addEventListener("volumechange", onVolumeChange);
-
-    if (el.duration && !isNaN(el.duration)) setDuration(el.duration);
-    if (!el.paused) setIsPlaying(true);
     setIsMuted(el.muted);
 
     return () => {
-      el.removeEventListener("play", onPlay);
-      el.removeEventListener("pause", onPause);
-      el.removeEventListener("ended", onEnded);
-      el.removeEventListener("timeupdate", onTimeUpdate);
-      el.removeEventListener("loadedmetadata", onLoadedMetadata);
       el.removeEventListener("volumechange", onVolumeChange);
     };
   }, [getMedia]);
@@ -123,7 +82,6 @@ export function AudioPlayer({
 
       el.play()
         .then(() => {
-          setIsPlaying(true);
           setError(null);
         })
         .catch((err) => {
@@ -149,7 +107,6 @@ export function AudioPlayer({
 
       el.play()
         .then(() => {
-          setIsPlaying(true);
           setError(null);
         })
         .catch((err) => {
@@ -158,41 +115,26 @@ export function AudioPlayer({
     }
   }, [shouldPlay, isVideo, hasStarted, defaultVolume, getMedia]);
 
-  function togglePlay() {
-    const el = getMedia();
-    if (!el) return;
+  // Close the popover on outside click or Escape
+  useEffect(() => {
+    if (!panelOpen) return;
 
-    if (isPlaying) {
-      el.pause();
-      setIsPlaying(false);
-    } else {
-      if (isVideo && el.muted) {
-        el.muted = false;
+    function onPointerDown(event: PointerEvent) {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setPanelOpen(false);
       }
-      el.play()
-        .then(() => {
-          setIsPlaying(true);
-          setError(null);
-        })
-        .catch((err) => {
-          console.error("Playback failed:", err);
-          setError("Ses oynatılamadı");
-        });
     }
-  }
-
-  function toggleMute() {
-    const el = getMedia();
-    if (!el) return;
-
-    if (isMuted) {
-      el.muted = false;
-      setIsMuted(false);
-    } else {
-      el.muted = true;
-      setIsMuted(true);
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setPanelOpen(false);
     }
-  }
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [panelOpen]);
 
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
     const newVol = parseFloat(e.target.value);
@@ -207,140 +149,49 @@ export function AudioPlayer({
     }
   }
 
-  function seekTo(seconds: number) {
-    const el = getMedia();
-    if (!el || !isFinite(duration) || duration <= 0) return;
-    const clamped = Math.max(0, Math.min(duration, seconds));
-    el.currentTime = clamped;
-    setCurrentTime(clamped);
-  }
-
-  function handleSeekKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    const step = 5;
-    if (e.key === "ArrowRight" || e.key === "ArrowUp") {
-      e.preventDefault();
-      seekTo(currentTime + step);
-    } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
-      e.preventDefault();
-      seekTo(currentTime - step);
-    } else if (e.key === "Home") {
-      e.preventDefault();
-      seekTo(0);
-    } else if (e.key === "End") {
-      e.preventDefault();
-      seekTo(duration);
-    }
-  }
-
-  function handleSeek(e: MouseEvent<HTMLDivElement>) {
-    const el = getMedia();
-    if (!progressBarRef.current || !el || !isFinite(duration) || duration <= 0) return;
-    const rect = progressBarRef.current.getBoundingClientRect();
-    const clickPosition = (e.clientX - rect.left) / rect.width;
-    const boundedPosition = Math.max(0, Math.min(1, clickPosition));
-    seekTo(boundedPosition * duration);
-  }
-
   if (!audioUrl && !videoRef) return null;
 
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-
   return (
-    <div className="guns-audio-player" role="region" aria-label="Müzik çalar">
+    <div ref={rootRef} className="guns-audio-player">
       {audioUrl ? (
         <audio
           ref={audioRef}
           src={audioUrl}
           preload="metadata"
           loop
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onEnded={() => setIsPlaying(false)}
           onError={() => setError("Müzik dosyası yüklenemedi")}
         />
       ) : null}
 
-      <div className="guns-audio-disc">
-        <button
-          className={`guns-audio-play-button${isPlaying ? " is-playing" : ""}`}
-          onClick={togglePlay}
-          aria-label={isPlaying ? "Müziği duraklat" : "Müziği oynat"}
-          type="button"
-        >
-          {isPlaying ? (
-            <Pause size={17} strokeWidth={2.2} />
-          ) : (
-            <Play size={17} strokeWidth={2.2} className="guns-play-icon-offset" />
-          )}
-        </button>
+      <button
+        className="guns-audio-mute-button"
+        onClick={() => setPanelOpen((open) => !open)}
+        aria-label={panelOpen ? "Ses panelini kapat" : "Ses panelini aç"}
+        aria-expanded={panelOpen}
+        type="button"
+      >
+        {isMuted || volume === 0 ? (
+          <VolumeX size={16} strokeWidth={2} />
+        ) : (
+          <Volume2 size={16} strokeWidth={2} />
+        )}
+      </button>
 
-        {/* Mini animated equalizer bars */}
-        <div className={`guns-audio-visualizer${isPlaying ? " is-animating" : ""}`} aria-hidden="true">
-          <span className="visualizer-bar bar-1" />
-          <span className="visualizer-bar bar-2" />
-          <span className="visualizer-bar bar-3" />
-          <span className="visualizer-bar bar-4" />
-        </div>
-      </div>
-
-      <div className="guns-audio-info">
-        <div className="guns-audio-meta">
-          <Music size={13} className="guns-audio-note-icon" aria-hidden="true" />
-          <span className="guns-audio-title" title={title}>
-            {title}
-          </span>
-          {artist ? <span className="guns-audio-artist">- {artist}</span> : null}
-        </div>
-
-        <div
-          ref={progressBarRef}
-          className="guns-audio-progress-bar"
-          onClick={handleSeek}
-          onKeyDown={handleSeekKeyDown}
-          role="slider"
-          tabIndex={0}
-          aria-label="Müzik konumu"
-          aria-valuenow={Math.round(currentTime)}
-          aria-valuemin={0}
-          aria-valuemax={Math.round(duration) || 100}
-          aria-valuetext={`${formatTime(currentTime)} / ${formatTime(duration)}`}
-        >
-          <div
-            className="guns-audio-progress-fill"
-            style={{ width: `${progressPercent}%` }}
+      {panelOpen ? (
+        <div className="guns-audio-popover" role="group" aria-label={`Ses seviyesi: ${title}`}>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={isMuted ? 0 : volume}
+            onChange={handleVolumeChange}
+            className="guns-audio-volume-slider guns-audio-volume-vertical"
+            aria-label="Ses seviyesi"
+            aria-valuetext={`%${Math.round((isMuted ? 0 : volume) * 100)}`}
           />
         </div>
-
-        <div className="guns-audio-timestamps">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
-      </div>
-
-      <div className="guns-audio-volume-controls">
-        <button
-          className="guns-audio-mute-button"
-          onClick={toggleMute}
-          aria-label={isMuted ? "Sesi aç" : "Sesi kapat"}
-          type="button"
-        >
-          {isMuted || volume === 0 ? (
-            <VolumeX size={15} strokeWidth={2} />
-          ) : (
-            <Volume2 size={15} strokeWidth={2} />
-          )}
-        </button>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={isMuted ? 0 : volume}
-          onChange={handleVolumeChange}
-          className="guns-audio-volume-slider"
-          aria-label="Ses seviyesi"
-        />
-      </div>
+      ) : null}
 
       {error ? (
         <span className="guns-audio-error" role="status">

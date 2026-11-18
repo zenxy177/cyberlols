@@ -118,29 +118,23 @@ export function GunsView({
       </div>
 
       <div className={`guns-stage-wrapper${entered ? " is-entered" : ""}`}>
-        {/* Floating Top Bar (Views Counter, Audio Player, Share) */}
-        <header className="guns-top-bar">
-          <div className="guns-top-bar-left">
-            <ViewsCounter initialCount={profile.views_count} />
-          </div>
+        {/* Corner Controls: Volume (top-left), Share (bottom-right) */}
+        <div className="guns-corner guns-corner-tl">
+          {hasAudioSource ? (
+            <AudioPlayer
+              audioUrl={hasExplicitAudio ? profile.audio_url : null}
+              videoRef={hasVideoAudio ? videoRef : undefined}
+              title={audioTitle}
+              artist={profile.audio_artist}
+              defaultVolume={profile.default_volume}
+              shouldPlay={entered}
+            />
+          ) : null}
+        </div>
 
-          <div className="guns-top-bar-center">
-            {hasAudioSource ? (
-              <AudioPlayer
-                audioUrl={hasExplicitAudio ? profile.audio_url : null}
-                videoRef={hasVideoAudio ? videoRef : undefined}
-                title={audioTitle}
-                artist={profile.audio_artist}
-                defaultVolume={profile.default_volume}
-                shouldPlay={entered}
-              />
-            ) : null}
-          </div>
-
-          <div className="guns-top-bar-right">
-            <ShareButton />
-          </div>
-        </header>
+        <div className="guns-corner guns-corner-br">
+          <ShareButton />
+        </div>
 
         {/* Center 3D Tilt Card */}
         <main className="guns-card-container guns-main-content">
@@ -153,7 +147,11 @@ export function GunsView({
               ["--card-scrim-alpha" as string]: cardScrim.toFixed(3),
             }}
           >
-                {/* Card Header: Avatar & Glow */}
+            {/* Views counter: bottom-left inside card */}
+            <div className="guns-card-corner-views">
+              <ViewsCounter initialCount={profile.views_count} />
+            </div>
+
             <div className="guns-card-avatar-wrap">
               <div className="guns-card-avatar-glow" aria-hidden="true" />
               {profile.enable_lunar_effects ? (

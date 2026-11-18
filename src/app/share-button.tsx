@@ -45,9 +45,8 @@ export function ShareButton() {
 
   return (
     <div className="share-control">
-      <button className="share-button" type="button" onClick={sharePage}>
-        <Share2 size={17} strokeWidth={1.8} aria-hidden="true" />
-        <span>Paylaş</span>
+      <button className="share-button share-icon-button" type="button" onClick={sharePage} aria-label="Sayfayı paylaş">
+        <Share2 size={15} strokeWidth={1.8} aria-hidden="true" />
       </button>
       <span className="share-feedback" role="status" aria-live="polite">
         {message}

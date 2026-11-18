@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Clock, Gamepad2, Headphones, Timer } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowUpRight } from "lucide-react";
 import {
   DiscordBadgeItem,
   type DiscordBadgeMode,
@@ -1293,208 +1293,33 @@ function MiniGamePlaytime({ start }: { start?: number }) {
   );
 }
 
-export function GameCard({ game }: { game: PresenceActivity }) {
-  const [smallFailed, setSmallFailed] = useState(false);
-  const [now, setNow] = useState(Date.now());
-
-  const known = getKnownGame(game.name, game.application_id);
-
-  const start = game.timestamps?.start;
-  const end = game.timestamps?.end;
+function SpotifyMiniArt({ spotify }: { spotify: PresenceSpotify }) {
+  const artUrl = spotify.album_art_url || null;
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (!start && !end) return;
-    const tick = () => setNow(Date.now());
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [start, end]);
+    setFailed(false);
+  }, [artUrl]);
 
-  const startMs = start ? (start < 10_000_000_000 ? start * 1000 : start) : null;
-  const endMs = end ? (end < 10_000_000_000 ? end * 1000 : end) : null;
-
-  const elapsedMs = startMs ? Math.max(0, now - startMs) : null;
-  const remainingMs = endMs && endMs > now ? endMs - now : null;
-
-  const largeImgUrl = resolveActivityAssetUrl(
-    game.application_id,
-    game.assets?.large_image,
-    256,
-  );
-  const smallImgUrl = resolveActivityAssetUrl(
-    game.application_id,
-    game.assets?.small_image,
-    128,
-  );
-  const imageCandidates = getActivityImageCandidates(game, 256);
-  const candidateKey = imageCandidates.join("|");
-  const [imgIndex, setImgIndex] = useState(0);
-
-  const primaryImgUrl = imageCandidates[imgIndex] ?? null;
-  const secondaryImgUrl = largeImgUrl ? smallImgUrl : null;
-
-  useEffect(() => {
-    setImgIndex(0);
-  }, [candidateKey, game.id, game.name]);
-
-  useEffect(() => {
-    setSmallFailed(false);
-  }, [secondaryImgUrl]);
-
-  const brandColor = known?.brandColor || "#6366f1";
-  const accentColor = known?.accentColor || "#00f2fe";
-  const glowColor = known?.glowColor || "rgba(99, 102, 241, 0.4)";
-  const borderRgba = known?.borderRgba || "rgba(99, 102, 241, 0.35)";
-
+  if (artUrl && !failed) {
+    return (
+      <img
+        src={artUrl}
+        alt=""
+        className="guns-discord-spotify-art"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
 
   return (
-    <div
-      className="guns-game-card"
-      style={{
-        ["--game-color" as string]: brandColor,
-        ["--game-accent" as string]: accentColor,
-        ["--game-glow" as string]: glowColor,
-        ["--game-border" as string]: borderRgba,
-      }}
-      aria-label={`Oyun etkinliği: ${game.name}${game.details ? ` - ${game.details}` : ""}`}
+    <span
+      className="guns-discord-spotify-art guns-discord-spotify-art-fallback"
+      title={spotify.song}
+      aria-hidden="true"
     >
-      <div className="guns-game-header">
-        <div className="guns-game-label">
-          {known ? (
-            <svg
-              width={13}
-              height={13}
-              viewBox={known.viewBox || "0 0 24 24"}
-              fill="currentColor"
-              className="guns-game-label-icon"
-              aria-hidden="true"
-            >
-              <path d={known.svgPath} />
-            </svg>
-          ) : (
-            <Gamepad2 size={13} className="guns-game-label-icon" aria-hidden="true" />
-          )}
-          <span>{known?.cardLabel || `PLAYING ${game.name.toUpperCase()}`}</span>
-        </div>
-        <div className="guns-game-live-badge" title="Canlı Etkinlik">
-          <span className="guns-game-live-dot" aria-hidden="true" />
-          <span className="guns-game-live-text">LIVE</span>
-        </div>
-      </div>
-
-      <div className="guns-game-body">
-        <div className="guns-game-art-wrap">
-          <div className="guns-game-art-container">
-            {primaryImgUrl ? (
-              <img
-                src={primaryImgUrl}
-                alt={game.assets?.large_text || game.name}
-                title={game.assets?.large_text || game.name}
-                className="guns-game-art"
-                onError={() => setImgIndex((index) => index + 1)}
-              />
-            ) : known ? (
-              <div
-                className="guns-game-art-branded"
-                style={{
-                  background: known.artBg,
-                  borderColor: known.brandColor,
-                }}
-                aria-hidden="true"
-              >
-                <div
-                  className="guns-game-branded-glow"
-                  style={{ background: known.glowColor }}
-                />
-                <svg
-                  width={26}
-                  height={26}
-                  viewBox={known.viewBox || "0 0 24 24"}
-                  fill="currentColor"
-                  style={{ color: known.brandColor }}
-                  className="guns-game-branded-logo"
-                >
-                  <path d={known.svgPath} />
-                </svg>
-                <span
-                  className="guns-game-branded-title"
-                  style={{ color: known.brandColor }}
-                >
-                  {known.shortName}
-                </span>
-              </div>
-            ) : (
-              <div className="guns-game-art-fallback" aria-hidden="true">
-                <div className="guns-game-fallback-glow" />
-                <div className="guns-game-fallback-hud">
-                  <span className="guns-game-fallback-hud-bracket top-left" />
-                  <span className="guns-game-fallback-hud-bracket top-right" />
-                  <span className="guns-game-fallback-hud-bracket bottom-left" />
-                  <span className="guns-game-fallback-hud-bracket bottom-right" />
-                  <span className="guns-game-fallback-monogram">{getGameMonogram(game.name)}</span>
-                  <span className="guns-game-fallback-chip">GAME</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {secondaryImgUrl && !smallFailed ? (
-            <img
-              src={secondaryImgUrl}
-              alt={game.assets?.small_text || ""}
-              title={game.assets?.small_text || undefined}
-              className="guns-game-small-art"
-              onError={() => setSmallFailed(true)}
-            />
-          ) : null}
-        </div>
-
-        <div className="guns-game-meta">
-          <span className="guns-game-title" title={game.name}>
-            {game.name}
-          </span>
-          {game.details ? (
-            <span className="guns-game-details" title={game.details}>
-              {game.details}
-            </span>
-          ) : known?.defaultDetails ? (
-            <span className="guns-game-details" title={known.defaultDetails}>
-              {known.defaultDetails}
-            </span>
-          ) : null}
-          {game.state ? (
-            <span className="guns-game-state" title={game.state}>
-              {game.state}
-            </span>
-          ) : null}
-        </div>
-      </div>
-
-      {elapsedMs !== null || remainingMs !== null ? (
-        <div className="guns-game-footer">
-          {elapsedMs !== null ? (
-            <div className="guns-game-timer-row">
-              <Clock size={11} className="guns-game-timer-icon" aria-hidden="true" />
-              <span className="guns-game-elapsed-time">
-                {formatElapsed(elapsedMs)} geçti
-              </span>
-              <span className="guns-game-elapsed-human">
-                ({formatElapsedHuman(elapsedMs)})
-              </span>
-            </div>
-          ) : null}
-
-          {remainingMs !== null ? (
-            <div className="guns-game-timer-row is-remaining">
-              <Timer size={11} className="guns-game-timer-icon" aria-hidden="true" />
-              <span className="guns-game-elapsed-time">
-                {formatElapsed(remainingMs)} kaldı
-              </span>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
+      <SpotifyIcon size={16} />
+    </span>
   );
 }
 
@@ -1512,140 +1337,6 @@ function SpotifyIcon({ size = 15 }: { size?: number }) {
   );
 }
 
-const SPOTIFY_WAVEFORM_BARS = 36;
-
-function SpotifyCard({ spotify }: { spotify: PresenceSpotify }) {
-  const [currentMs, setCurrentMs] = useState(0);
-
-  const rawStart = spotify.timestamps?.start ?? 0;
-  const rawEnd = spotify.timestamps?.end ?? 0;
-  const start =
-    rawStart && rawStart < 10_000_000_000 ? rawStart * 1000 : rawStart;
-  const end = rawEnd && rawEnd < 10_000_000_000 ? rawEnd * 1000 : rawEnd;
-  const totalMs = end > start ? end - start : 0;
-
-  useEffect(() => {
-    if (!start || !end || totalMs <= 0) return;
-
-    function update() {
-      const now = Date.now();
-      const elapsed = Math.max(0, Math.min(totalMs, now - start));
-      setCurrentMs(elapsed);
-    }
-
-    update();
-    const interval = setInterval(update, 1000);
-    return () => clearInterval(interval);
-  }, [start, end, totalMs]);
-
-  const waveformBars = useMemo(
-    () =>
-      generateTrackWaveform(
-        `${spotify.song}-${spotify.artist}`,
-        SPOTIFY_WAVEFORM_BARS,
-      ),
-    [spotify.song, spotify.artist],
-  );
-
-  const progressPercent = totalMs > 0 ? (currentMs / totalMs) * 100 : 0;
-  const activeBarsCount =
-    totalMs > 0
-      ? Math.max(
-          currentMs > 0 ? 1 : 0,
-          Math.min(
-            SPOTIFY_WAVEFORM_BARS,
-            Math.round((currentMs / totalMs) * SPOTIFY_WAVEFORM_BARS),
-          ),
-        )
-      : 0;
-
-  const cleanArtist = spotify.artist.replace(/;\s*/g, ", ");
-  const trackUrl = spotify.track_id
-    ? `https://open.spotify.com/track/${spotify.track_id}`
-    : `https://open.spotify.com/search/${encodeURIComponent(`${spotify.song} ${cleanArtist}`)}`;
-
-  return (
-    <a
-      href={trackUrl}
-      target="_blank"
-      rel="noreferrer"
-      className="guns-spotify-card"
-      aria-label={`Spotify: ${spotify.song} - ${cleanArtist}`}
-    >
-      <div className="guns-spotify-header">
-        <div className="guns-spotify-label">
-          <SpotifyIcon size={14} />
-          <span>{"SPOTIFY'DA DİNLİYOR"}</span>
-        </div>
-        <div className="guns-spotify-waves" aria-hidden="true">
-          <span className="spotify-wave-bar bar-1" />
-          <span className="spotify-wave-bar bar-2" />
-          <span className="spotify-wave-bar bar-3" />
-        </div>
-      </div>
-
-      <div className="guns-spotify-body">
-        {spotify.album_art_url ? (
-          <div className="guns-spotify-art-wrap">
-            <img
-              src={spotify.album_art_url}
-              alt=""
-              className="guns-spotify-art"
-            />
-          </div>
-        ) : null}
-
-        <div className="guns-spotify-meta">
-          <span className="guns-spotify-title" title={spotify.song}>
-            {spotify.song}
-          </span>
-          <span className="guns-spotify-artist" title={cleanArtist}>
-            by {cleanArtist}
-          </span>
-          {spotify.album && spotify.album !== spotify.song ? (
-            <span className="guns-spotify-album" title={spotify.album}>
-              on {spotify.album}
-            </span>
-          ) : null}
-        </div>
-
-        <ArrowUpRight size={15} className="guns-spotify-arrow" aria-hidden="true" />
-      </div>
-
-      {totalMs > 0 ? (
-        <div className="guns-spotify-progress-wrap">
-          <div
-            className="guns-spotify-soundwave"
-            role="progressbar"
-            aria-valuenow={Math.round(progressPercent)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Şarkı çalma ilerlemesi: %${Math.round(progressPercent)}`}
-          >
-            {waveformBars.map((height, idx) => {
-              const isActive = idx < activeBarsCount;
-              const isPlayhead = idx === activeBarsCount - 1;
-              return (
-                <span
-                  key={idx}
-                  className={`guns-spotify-soundwave-bar ${isActive ? "is-active" : "is-inactive"} ${isPlayhead ? "is-playhead" : ""}`}
-                  style={{
-                    ["--bar-h" as string]: `${Math.round(height * 100)}%`,
-                    animationDelay: `${(idx % 6) * 0.16}s`,
-                  }}
-                />
-              );
-            })}
-          </div>
-          <div className="guns-spotify-time">
-            <span>{formatTime(currentMs)}</span>
-            <span>{formatTime(totalMs)}</span>
-          </div>
-        </div>
-      ) : null}
-    </a>
-  );
-}
 
 const DISCORD_STATUS_LABELS: Record<string, string> = {
   online: "Çevrimiçi",
@@ -1790,6 +1481,7 @@ export function DiscordPresence({
   // Check activity
   const spotify = data?.listening_to_spotify ? data.spotify : null;
   const gameActivity = findPrimaryGameActivity(data?.activities);
+  const cleanArtist = spotify ? spotify.artist.replace(/;\s*/g, ", ") : "";
 
   return (
     <div className="guns-discord-wrapper">
@@ -1844,22 +1536,29 @@ export function DiscordPresence({
           </div>
 
           {gameActivity ? (
-            <div className="guns-discord-activity is-game">
+            <div className="guns-discord-activity is-game has-art">
+              <span className="guns-discord-activity-text" title={gameActivity.name}>
+                Playing <b>{gameActivity.name}</b>
+              </span>
+              <MiniGamePlaytime start={gameActivity.timestamps?.start} />
+              <span className="guns-discord-activity-gap" aria-hidden="true" />
               <MiniGameThumbnail
                 key={`${gameActivity.id || gameActivity.name}`}
                 activity={gameActivity}
               />
-              <span className="guns-discord-activity-text" title={gameActivity.name}>
-                {gameActivity.name}
-              </span>
-              <MiniGamePlaytime start={gameActivity.timestamps?.start} />
             </div>
           ) : spotify ? (
-            <div className="guns-discord-activity is-spotify">
-              <Headphones size={12} className="guns-discord-activity-icon" />
-              <span className="guns-discord-activity-text" title={`${spotify.song} - ${spotify.artist}`}>
-                {spotify.song}
+            <div className="guns-discord-activity is-spotify has-art">
+              <span className="guns-discord-activity-lines">
+                <span className="guns-discord-activity-listen">
+                  Listening to <b title={`${spotify.song} - ${spotify.artist}`}>{spotify.song}</b>
+                </span>
+                <span className="guns-discord-activity-by" title={cleanArtist}>
+                  by {cleanArtist}
+                </span>
               </span>
+              <span className="guns-discord-activity-gap" aria-hidden="true" />
+              <SpotifyMiniArt spotify={spotify} />
             </div>
           ) : (
             <div className="guns-discord-status-text">
@@ -1870,19 +1569,6 @@ export function DiscordPresence({
 
         <ArrowUpRight size={16} className="guns-discord-arrow" aria-hidden="true" />
       </a>
-
-      {/* Rich Game Activity Card */}
-      {gameActivity ? (
-        <GameCard
-          key={`${gameActivity.id || gameActivity.name}-${gameActivity.timestamps?.start || ""}`}
-          game={gameActivity}
-        />
-      ) : null}
-
-      {/* Rich Spotify Song Profile Card */}
-      {spotify ? (
-        <SpotifyCard spotify={spotify} />
-      ) : null}
     </div>
   );
 }
