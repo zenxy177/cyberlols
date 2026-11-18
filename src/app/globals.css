@@ -4104,9 +4104,12 @@ textarea:focus-visible {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: clamp(5px, 1vw, 8px);
+  gap: clamp(6px, 1.4vw, 10px);
   margin-top: 6px;
+  width: fit-content;
   max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .guns-social-badge.layout-dock,
@@ -4115,9 +4118,9 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: clamp(32px, 3.8vw, 36px);
-  height: clamp(32px, 3.8vw, 36px);
-  border-radius: clamp(8px, 1.1vw, 10px);
+  width: clamp(40px, 4.8vw, 44px);
+  height: clamp(40px, 4.8vw, 44px);
+  border-radius: clamp(10px, 1.4vw, 12px);
   background: rgba(18, 20, 30, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
