@@ -320,7 +320,7 @@ export function SocialBadges({ links, layout = "dock" }: SocialBadgesProps) {
             aria-label={displayName}
           >
             <span className="guns-badge-icon" aria-hidden="true">
-              <IconComponent size={20} />
+              <IconComponent size={16} />
             </span>
 
             {/* Floating Tooltip on Hover */}
