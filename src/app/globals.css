@@ -3501,11 +3501,11 @@ textarea:focus-visible {
 
 .guns-discord-badge {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 24px;
+  grid-template-columns: 48px minmax(0, 1fr) 20px;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 9px 10px;
+  padding: 8px 10px;
   border-radius: 16px;
   background: rgba(18, 22, 33, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -3597,7 +3597,7 @@ textarea:focus-visible {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
 .guns-discord-name-row {
@@ -4504,7 +4504,7 @@ textarea:focus-visible {
   .click-to-enter-content,
   .guns-typewriter-cursor,
   .guns-audio-visualizer .visualizer-bar,
-  .spotify-wave-bar {
+  .guns-spotify-soundwave-bar {
     animation: none !important;
   }
 
@@ -4833,7 +4833,7 @@ textarea:focus-visible {
 .guns-spotify-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
   min-width: 0;
   padding: 0;
   background: transparent;
@@ -4847,50 +4847,29 @@ textarea:focus-visible {
   background: transparent;
 }
 
-.guns-spotify-label {
+.guns-spotify-title-row {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 9px;
-  font-weight: 700;
+  gap: 5px;
+  min-width: 0;
   color: #1db954;
-  line-height: 1.1;
 }
 
-.guns-spotify-waves {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 12px;
-}
-
-.spotify-wave-bar {
-  width: 2px;
-  background: #1db954;
-  border-radius: 1px;
-  animation: spotifyWave 1s ease-in-out infinite;
-}
-
-.spotify-wave-bar.bar-1 { height: 6px; animation-delay: 0s; }
-.spotify-wave-bar.bar-2 { height: 12px; animation-delay: 0.2s; }
-.spotify-wave-bar.bar-3 { height: 8px; animation-delay: 0.4s; }
-
-@keyframes spotifyWave {
-  0%, 100% { height: 4px; }
-  50% { height: 12px; }
+.guns-spotify-title-row svg {
+  flex: 0 0 auto;
 }
 
 .guns-spotify-body {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
 .guns-spotify-art-wrap {
   order: 2;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
   border-radius: 6px;
   overflow: hidden;
@@ -4907,13 +4886,13 @@ textarea:focus-visible {
 .guns-spotify-meta {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
   flex: 1;
 }
 
 .guns-spotify-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #ffffff;
   white-space: nowrap;
@@ -4929,28 +4908,21 @@ textarea:focus-visible {
   text-overflow: ellipsis;
 }
 
-.guns-spotify-album {
-  font-size: 9px;
-  color: #718096;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .guns-spotify-progress-wrap {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  width: 100%;
 }
 
 /* Soundwave Waveform Progress Bar */
 .guns-spotify-soundwave {
   width: 100%;
-  height: 12px;
+  height: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 2px;
+  gap: 1px;
   padding: 1px 0;
   position: relative;
 }
@@ -4959,10 +4931,10 @@ textarea:focus-visible {
   display: block;
   flex: 1 1 0%;
   min-width: 2px;
-  max-width: 4px;
+  max-width: 3px;
   height: var(--bar-h, 45%);
   min-height: 4px;
-  max-height: 10px;
+  max-height: 8px;
   border-radius: 9999px;
   transform-origin: center;
   transition: height 0.3s ease, background-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;

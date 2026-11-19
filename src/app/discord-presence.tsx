@@ -1584,56 +1584,49 @@ function SpotifyCard({ spotify }: { spotify: PresenceSpotify }) {
         ) : null}
 
         <div className="guns-spotify-meta">
-          <span className="guns-spotify-label">
-            <SpotifyIcon size={11} />
-            <span>Dinliyor</span>
-          </span>
-          <span className="guns-spotify-title" title={spotify.song}>
-            {spotify.song}
+          <span className="guns-spotify-title-row">
+            <SpotifyIcon size={12} />
+            <span className="guns-spotify-title" title={spotify.song}>
+              {spotify.song}
+            </span>
           </span>
           <span className="guns-spotify-artist" title={cleanArtist}>
             by {cleanArtist}
           </span>
-          {spotify.album && spotify.album !== spotify.song ? (
-            <span className="guns-spotify-album" title={spotify.album}>
-              on {spotify.album}
-            </span>
+          {totalMs > 0 ? (
+            <div className="guns-spotify-progress-wrap">
+              <div
+                className="guns-spotify-soundwave"
+                role="progressbar"
+                aria-valuenow={Math.round(progressPercent)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`Şarkı çalma ilerlemesi: %${Math.round(progressPercent)}`}
+              >
+                {waveformBars.map((height, idx) => {
+                  const isActive = idx < activeBarsCount;
+                  const isPlayhead = idx === activeBarsCount - 1;
+                  return (
+                    <span
+                      key={idx}
+                      className={`guns-spotify-soundwave-bar ${isActive ? "is-active" : "is-inactive"} ${isPlayhead ? "is-playhead" : ""}`}
+                      style={{
+                        ["--bar-h" as string]: `${Math.round(height * 100)}%`,
+                        animationDelay: `${(idx % 6) * 0.16}s`,
+                      }}
+                    />
+                  );
+                })}
+              </div>
+              <div className="guns-spotify-time">
+                <span>{formatTime(currentMs)}</span>
+                <span>{formatTime(totalMs)}</span>
+              </div>
+            </div>
           ) : null}
         </div>
 
       </div>
-
-      {totalMs > 0 ? (
-        <div className="guns-spotify-progress-wrap">
-          <div
-            className="guns-spotify-soundwave"
-            role="progressbar"
-            aria-valuenow={Math.round(progressPercent)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Şarkı çalma ilerlemesi: %${Math.round(progressPercent)}`}
-          >
-            {waveformBars.map((height, idx) => {
-              const isActive = idx < activeBarsCount;
-              const isPlayhead = idx === activeBarsCount - 1;
-              return (
-                <span
-                  key={idx}
-                  className={`guns-spotify-soundwave-bar ${isActive ? "is-active" : "is-inactive"} ${isPlayhead ? "is-playhead" : ""}`}
-                  style={{
-                    ["--bar-h" as string]: `${Math.round(height * 100)}%`,
-                    animationDelay: `${(idx % 6) * 0.16}s`,
-                  }}
-                />
-              );
-            })}
-          </div>
-          <div className="guns-spotify-time">
-            <span>{formatTime(currentMs)}</span>
-            <span>{formatTime(totalMs)}</span>
-          </div>
-        </div>
-      ) : null}
     </a>
   );
 }
