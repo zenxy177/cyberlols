@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { createServerSupabaseServiceRole } from "@/lib/supabase/server";
 
 export type ViewLogEntry = {
   id: string;
@@ -160,7 +160,7 @@ export async function getRealAnalytics() {
   let dbViewsCount: number | null = null;
 
   try {
-    const supabase = await createServerSupabase();
+    const supabase = createServerSupabaseServiceRole();
 
     const { data: prof } = await supabase
       .from("profiles")

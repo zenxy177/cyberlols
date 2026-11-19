@@ -14,11 +14,17 @@ export function getPresenceApiConfig(): PresenceApiConfig | null {
     if (baseUrl.protocol !== "http:" && baseUrl.protocol !== "https:") {
       return null;
     }
+    const isLocalhost =
+      baseUrl.hostname === "localhost" ||
+      baseUrl.hostname === "127.0.0.1" ||
+      baseUrl.hostname === "::1";
+    if (process.env.NODE_ENV === "production" && baseUrl.protocol !== "https:" && !isLocalhost) {
+      return null;
+    }
 
     const restUrl = new URL("/presence", baseUrl);
     const wsUrl = new URL("/ws", baseUrl);
     wsUrl.protocol = baseUrl.protocol === "https:" ? "wss:" : "ws:";
-    wsUrl.searchParams.set("key", key);
 
     // Botun kök yolu özel bir prefix içeriyorsa (ör. /warxy) koru.
     if (baseUrl.pathname && baseUrl.pathname !== "/") {

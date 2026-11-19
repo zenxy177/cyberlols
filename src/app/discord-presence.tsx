@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, Clock, Gamepad2, Headphones, Timer } from "lucide-react";
+import { ArrowUpRight, Clock, Gamepad2, Timer } from "lucide-react";
 import {
   DiscordBadgeItem,
   type DiscordBadgeMode,
@@ -1228,7 +1228,7 @@ function MiniGameThumbnail({
       <img
         src={imgUrl}
         alt={activity.name}
-        className="guns-discord-game-pill-icon"
+        className="guns-discord-game-pill-icon guns-discord-activity-art"
         onError={() => setImgIndex((index) => index + 1)}
       />
     );
@@ -1572,18 +1572,6 @@ function SpotifyCard({ spotify }: { spotify: PresenceSpotify }) {
       className="guns-spotify-card"
       aria-label={`Spotify: ${spotify.song} - ${cleanArtist}`}
     >
-      <div className="guns-spotify-header">
-        <div className="guns-spotify-label">
-          <SpotifyIcon size={14} />
-          <span>{"SPOTIFY'DA DİNLİYOR"}</span>
-        </div>
-        <div className="guns-spotify-waves" aria-hidden="true">
-          <span className="spotify-wave-bar bar-1" />
-          <span className="spotify-wave-bar bar-2" />
-          <span className="spotify-wave-bar bar-3" />
-        </div>
-      </div>
-
       <div className="guns-spotify-body">
         {spotify.album_art_url ? (
           <div className="guns-spotify-art-wrap">
@@ -1596,6 +1584,10 @@ function SpotifyCard({ spotify }: { spotify: PresenceSpotify }) {
         ) : null}
 
         <div className="guns-spotify-meta">
+          <span className="guns-spotify-label">
+            <SpotifyIcon size={11} />
+            <span>Dinliyor</span>
+          </span>
           <span className="guns-spotify-title" title={spotify.song}>
             {spotify.song}
           </span>
@@ -1609,7 +1601,6 @@ function SpotifyCard({ spotify }: { spotify: PresenceSpotify }) {
           ) : null}
         </div>
 
-        <ArrowUpRight size={15} className="guns-spotify-arrow" aria-hidden="true" />
       </div>
 
       {totalMs > 0 ? (
@@ -1794,34 +1785,43 @@ export function DiscordPresence({
   return (
     <div className="guns-discord-wrapper">
       {/* Discord Profile Pill */}
-      <a
-        href={`https://discord.com/users/${encodeURIComponent(discordUserId)}`}
-        target="_blank"
-        rel="noreferrer"
-        className="guns-discord-badge"
-        aria-label={`Discord profili: ${displayName} (${discordStatusLabel(status)})`}
-      >
-        <div className="guns-discord-avatar-container">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt=""
-              className="guns-discord-avatar-img"
+      <div className="guns-discord-badge">
+        <a
+          href={`https://discord.com/users/${encodeURIComponent(discordUserId)}`}
+          target="_blank"
+          rel="noreferrer"
+          className="guns-discord-avatar-link"
+          aria-label={`Discord profili: ${displayName} (${discordStatusLabel(status)})`}
+        >
+          <div className="guns-discord-avatar-container">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt=""
+                className="guns-discord-avatar-img"
+              />
+            ) : (
+              <div className="guns-discord-avatar-placeholder">
+                <span>{username.slice(0, 1).toUpperCase()}</span>
+              </div>
+            )}
+            <span
+              className={`guns-discord-status-dot status-${status}`}
+              title={`Durum: ${status}`}
             />
-          ) : (
-            <div className="guns-discord-avatar-placeholder">
-              <span>{username.slice(0, 1).toUpperCase()}</span>
-            </div>
-          )}
-          <span
-            className={`guns-discord-status-dot status-${status}`}
-            title={`Durum: ${status}`}
-          />
-        </div>
+          </div>
+        </a>
 
         <div className="guns-discord-details">
           <div className="guns-discord-name-row">
-            <span className="guns-discord-display-name">{displayName}</span>
+            <a
+              href={`https://discord.com/users/${encodeURIComponent(discordUserId)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="guns-discord-display-name"
+            >
+              {displayName}
+            </a>
             <span className="guns-discord-username">@{username}</span>
             {badges.length > 0 ? (
               <div
@@ -1855,12 +1855,7 @@ export function DiscordPresence({
               <MiniGamePlaytime start={gameActivity.timestamps?.start} />
             </div>
           ) : spotify ? (
-            <div className="guns-discord-activity is-spotify">
-              <Headphones size={12} className="guns-discord-activity-icon" />
-              <span className="guns-discord-activity-text" title={`${spotify.song} - ${spotify.artist}`}>
-                {spotify.song}
-              </span>
-            </div>
+            <SpotifyCard spotify={spotify} />
           ) : (
             <div className="guns-discord-status-text">
               <span>{discordStatusLabel(status).toLocaleUpperCase("tr-TR")}</span>
@@ -1868,21 +1863,16 @@ export function DiscordPresence({
           )}
         </div>
 
-        <ArrowUpRight size={16} className="guns-discord-arrow" aria-hidden="true" />
-      </a>
-
-      {/* Rich Game Activity Card */}
-      {gameActivity ? (
-        <GameCard
-          key={`${gameActivity.id || gameActivity.name}-${gameActivity.timestamps?.start || ""}`}
-          game={gameActivity}
-        />
-      ) : null}
-
-      {/* Rich Spotify Song Profile Card */}
-      {spotify ? (
-        <SpotifyCard spotify={spotify} />
-      ) : null}
+        <a
+          href={`https://discord.com/users/${encodeURIComponent(discordUserId)}`}
+          target="_blank"
+          rel="noreferrer"
+          className="guns-discord-profile-link"
+          aria-label="Discord profilini aç"
+        >
+          <ArrowUpRight size={15} aria-hidden="true" />
+        </a>
+      </div>
     </div>
   );
 }

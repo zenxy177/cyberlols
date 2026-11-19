@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { createServerSupabase } from "@/lib/supabase/server";
+import {
+  createServerSupabase,
+  createServerSupabaseServiceRole,
+} from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/profile";
 import { describeVisit } from "@/lib/analytics-storage";
 
@@ -40,7 +43,8 @@ export async function POST(req: Request) {
     // Atomik kayıt: aynı IP 24 saat içinde tekrar sayılmaz. Anon istemci
     // log tablosunu okuyamadığı için tekilleştirme RPC içinde yapılır.
     const visit = describeVisit(req.headers);
-    const visitRpc = await supabase.rpc("record_profile_view", {
+    const serviceSupabase = createServerSupabaseServiceRole();
+    const visitRpc = await serviceSupabase.rpc("record_profile_view", {
       profile_slug: visit.payload.profile_id,
       device_type: visit.payload.device_type,
       browser_name: visit.payload.browser,
@@ -66,14 +70,17 @@ export async function POST(req: Request) {
 
     // Eski şema yedeği: RPC yoksa log yaz ve sayacı artır.
     try {
-      await supabase.from("profile_views_log").insert(visit.payload);
+      await serviceSupabase.from("profile_views_log").insert({
+        ...visit.payload,
+        ip_hash: visit.ipHash,
+      });
     } catch (logErr) {
       console.warn("Analytics visit log insert error:", logErr);
     }
 
     // Call atomic stored procedure (schema uses profile_slug; default arg also works)
     let count: number | null = null;
-    const rpc1 = await supabase.rpc("increment_profile_views", { profile_slug: "main" });
+    const rpc1 = await serviceSupabase.rpc("increment_profile_views", { profile_slug: "main" });
     if (!rpc1.error && typeof rpc1.data === "number") {
       count = rpc1.data;
     } else {

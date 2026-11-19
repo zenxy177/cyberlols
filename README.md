@@ -26,6 +26,7 @@ Türkçe arayüzlü, herkese açık tek kişilik bio profili ve sahibine özel y
    ```text
    NEXT_PUBLIC_SUPABASE_URL=https://proje-kimligi.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+   SUPABASE_SERVICE_ROLE_KEY=service_role_secret...
    ANALYTICS_IP_SALT=uzun-rastgele-bir-metin
    DISCORD_CLIENT_ID=
    DISCORD_CLIENT_SECRET=

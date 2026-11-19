@@ -49,7 +49,7 @@ function safeEqual(a, b) {
 function isAuthorized(req, url) {
   const header = req.headers["x-api-key"];
   const headerKey = Array.isArray(header) ? header[0] : header;
-  return safeEqual(headerKey, API_KEY) || safeEqual(url.searchParams.get("key"), API_KEY);
+  return safeEqual(headerKey, API_KEY);
 }
 
 function toNumber(value) {

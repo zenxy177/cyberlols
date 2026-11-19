@@ -1,4 +1,5 @@
 import { getPresenceApiConfig } from "@/lib/presence-server";
+import WebSocket from "ws";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -56,7 +57,9 @@ export async function GET() {
       keepAlive = setInterval(() => send(": keepalive\n\n"), 20000);
 
       try {
-        socket = new WebSocket(config.wsUrl);
+        socket = new WebSocket(config.wsUrl, {
+          headers: { "x-api-key": config.key },
+        });
       } catch {
         send('event: error\ndata: {"error":"websocket_unavailable"}\n\n');
         finish();

@@ -161,7 +161,8 @@ end;
 $$;
 
 revoke all on function public.increment_profile_views(text) from public;
-grant execute on function public.increment_profile_views(text) to anon, authenticated;
+revoke execute on function public.increment_profile_views(text) from anon, authenticated;
+grant execute on function public.increment_profile_views(text) to service_role;
 
 create or replace function public.set_profile_views(new_count bigint, profile_slug text default 'main')
 returns bigint
@@ -182,7 +183,8 @@ end;
 $$;
 
 revoke all on function public.set_profile_views(bigint, text) from public;
-grant execute on function public.set_profile_views(bigint, text) to authenticated;
+revoke execute on function public.set_profile_views(bigint, text) from anon;
+grant execute on function public.set_profile_views(bigint, text) to authenticated, service_role;
 
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -270,15 +272,11 @@ create index if not exists idx_profile_views_log_profile_id on public.profile_vi
 create index if not exists idx_profile_views_log_ip_hash on public.profile_views_log (ip_hash, viewed_at desc);
 
 alter table public.profile_views_log enable row level security;
-grant insert on public.profile_views_log to anon, authenticated;
+revoke insert on public.profile_views_log from anon, authenticated;
+grant insert on public.profile_views_log to service_role;
 grant select, delete on public.profile_views_log to authenticated;
 
 drop policy if exists "Anyone can record a view log" on public.profile_views_log;
-create policy "Anyone can record a view log"
-  on public.profile_views_log
-  for insert
-  to anon, authenticated
-  with check (true);
 
 drop policy if exists "Admins can view all logs" on public.profile_views_log;
 create policy "Admins can view all logs"
@@ -348,4 +346,5 @@ begin
 end;
 $$;
 
-grant execute on function public.record_profile_view(text, text, text, text, text, text, text) to anon, authenticated;
+revoke all on function public.record_profile_view(text, text, text, text, text, text, text) from public, anon, authenticated;
+grant execute on function public.record_profile_view(text, text, text, text, text, text, text) to service_role;
