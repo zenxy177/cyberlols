@@ -6,6 +6,8 @@ import { Volume2, VolumeX } from "lucide-react";
 type AudioPlayerProps = {
   audioUrl?: string | null;
   videoRef?: React.RefObject<HTMLVideoElement | null>;
+  videoAudioFallback?: "video" | "music";
+  onVideoAudioChange?: (active: boolean) => void;
   title?: string;
   artist?: string;
   defaultVolume?: number;
@@ -15,6 +17,8 @@ type AudioPlayerProps = {
 export function AudioPlayer({
   audioUrl,
   videoRef,
+  videoAudioFallback = "video",
+  onVideoAudioChange,
   title = "Arka Plan Müziği",
   defaultVolume = 50,
   shouldPlay = false,
@@ -27,26 +31,72 @@ export function AudioPlayer({
   const [panelOpen, setPanelOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isVideo = Boolean(videoRef && !audioUrl);
+  const isVideo = useRef(Boolean(videoRef));
 
   const getMedia = useCallback((): HTMLMediaElement | null => {
-    if (isVideo && videoRef) {
+    if (isVideo.current && videoRef) {
       return videoRef.current;
     }
     return audioRef.current;
-  }, [isVideo, videoRef]);
+  }, [videoRef]);
+
+  const activateAudio = useCallback(() => {
+    const video = videoRef?.current;
+    const audioTracks = video
+      ? (video as HTMLVideoElement & { audioTracks?: { length: number } }).audioTracks
+      : undefined;
+    const mozHasAudio = video
+      ? (video as HTMLVideoElement & { mozHasAudio?: boolean }).mozHasAudio
+      : undefined;
+    const canUseVideoAudio =
+      Boolean(video) &&
+      (!audioUrl ||
+        (typeof audioTracks?.length === "number"
+          ? audioTracks.length > 0
+          : typeof mozHasAudio === "boolean"
+            ? mozHasAudio
+            : videoAudioFallback === "video"));
+    const media = canUseVideoAudio ? video : audioRef.current;
+    if (!media) return;
+
+    if (
+      !canUseVideoAudio &&
+      video &&
+      video.readyState >= HTMLMediaElement.HAVE_METADATA &&
+      video.seekable.length > 0
+    ) {
+      try {
+        video.currentTime = 0;
+      } catch (err) {
+        console.warn("Background video could not be synchronized with fallback music:", err);
+      }
+    }
+
+    isVideo.current = canUseVideoAudio;
+    onVideoAudioChange?.(canUseVideoAudio);
+    setHasStarted(true);
+    media.muted = false;
+    media.volume = Math.max(0, Math.min(1, defaultVolume / 100));
+    setVolume(media.volume);
+    media.play()
+      .then(() => setError(null))
+      .catch((err) => {
+        console.warn("Autoplay was prevented or media failed:", err);
+        setError("Ses başlatılamadı. Ses ayarlarını kontrol edip yeniden deneyin.");
+      });
+  }, [audioUrl, defaultVolume, onVideoAudioChange, videoAudioFallback, videoRef]);
 
   // Synchronize initial volume and cached metadata
   useEffect(() => {
     const el = getMedia();
     if (el) {
       const initialVol = Math.max(0, Math.min(1, defaultVolume / 100));
-      if (!isVideo || !el.muted) {
+      if (!isVideo.current || !el.muted) {
         el.volume = initialVol;
       }
       setVolume(initialVol);
     }
-  }, [defaultVolume, isVideo, getMedia]);
+  }, [defaultVolume, getMedia]);
 
   // Synchronize mute state from media element (especially for external videoRef)
   useEffect(() => {
@@ -66,54 +116,20 @@ export function AudioPlayer({
     return () => {
       el.removeEventListener("volumechange", onVolumeChange);
     };
-  }, [getMedia]);
+  }, [getMedia, hasStarted]);
 
   // Handle immediate play event dispatched synchronously from Click to Enter user gesture
   useEffect(() => {
-    function handleGesturePlay() {
-      const el = getMedia();
-      if (!el) return;
-
-      setHasStarted(true);
-      if (isVideo) {
-        el.muted = false;
-        el.volume = Math.max(0, Math.min(1, defaultVolume / 100));
-      }
-
-      el.play()
-        .then(() => {
-          setError(null);
-        })
-        .catch((err) => {
-          console.warn("Autoplay was prevented or media failed:", err);
-        });
-    }
-
-    window.addEventListener("guns:play-audio", handleGesturePlay);
-    return () => window.removeEventListener("guns:play-audio", handleGesturePlay);
-  }, [isVideo, defaultVolume, getMedia]);
+    window.addEventListener("guns:play-audio", activateAudio);
+    return () => window.removeEventListener("guns:play-audio", activateAudio);
+  }, [activateAudio]);
 
   // Handle play trigger fallback from Click to Enter state
   useEffect(() => {
     if (shouldPlay && !hasStarted) {
-      const el = getMedia();
-      if (!el) return;
-
-      setHasStarted(true);
-      if (isVideo) {
-        el.muted = false;
-        el.volume = Math.max(0, Math.min(1, defaultVolume / 100));
-      }
-
-      el.play()
-        .then(() => {
-          setError(null);
-        })
-        .catch((err) => {
-          console.warn("Autoplay was prevented or media failed:", err);
-        });
+      activateAudio();
     }
-  }, [shouldPlay, isVideo, hasStarted, defaultVolume, getMedia]);
+  }, [shouldPlay, hasStarted, activateAudio]);
 
   // Close the popover on outside click or Escape
   useEffect(() => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import {
   DiscordBadgeItem,
@@ -55,6 +55,12 @@ export type PresenceData = {
     username: string;
     avatar: string | null;
     global_name: string | null;
+    primary_guild?: {
+      identity_guild_id?: string | null;
+      identity_enabled?: boolean | null;
+      tag?: string | null;
+      badge?: string | null;
+    } | null;
     discriminator?: string;
     public_flags?: number;
     flags?: number;
@@ -1358,6 +1364,7 @@ export function DiscordPresence({
   badgeMode = "auto",
 }: DiscordPresenceProps) {
   const [data, setData] = useState<PresenceData | null>(null);
+  const avatarImageRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     if (!discordUserId) return;
@@ -1468,6 +1475,14 @@ export function DiscordPresence({
         data.discord_user.avatar.startsWith("a_") ? "gif" : "webp"
       }?size=128`
     : fallbackAvatarUrl;
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+    if (avatarImageRef.current?.complete && avatarImageRef.current.naturalWidth === 0) {
+      setAvatarLoadFailed(true);
+    }
+  }, [avatarUrl]);
 
   // Resolve Discord Badges (presence public_flags + Nitro + custom settings)
   const badges = resolveDiscordBadges({
@@ -1482,6 +1497,13 @@ export function DiscordPresence({
   const spotify = data?.listening_to_spotify ? data.spotify : null;
   const gameActivity = findPrimaryGameActivity(data?.activities);
   const cleanArtist = spotify ? spotify.artist.replace(/;\s*/g, ", ") : "";
+  const primaryGuild = data?.discord_user?.primary_guild;
+  const clanTag =
+    primaryGuild?.identity_enabled === false ? "" : primaryGuild?.tag?.trim() || "";
+  const clanBadgeUrl =
+    clanTag && primaryGuild?.identity_guild_id && primaryGuild.badge
+      ? `https://cdn.discordapp.com/clan-badges/${encodeURIComponent(primaryGuild.identity_guild_id)}/${encodeURIComponent(primaryGuild.badge)}.png?size=32`
+      : null;
 
   return (
     <div className="guns-discord-wrapper">
@@ -1494,11 +1516,13 @@ export function DiscordPresence({
         aria-label={`Discord profili: ${displayName} (${discordStatusLabel(status)})`}
       >
         <div className="guns-discord-avatar-container">
-          {avatarUrl ? (
+          {avatarUrl && !avatarLoadFailed ? (
             <img
+              ref={avatarImageRef}
               src={avatarUrl}
               alt=""
               className="guns-discord-avatar-img"
+              onError={() => setAvatarLoadFailed(true)}
             />
           ) : (
             <div className="guns-discord-avatar-placeholder">
@@ -1507,7 +1531,7 @@ export function DiscordPresence({
           )}
           <span
             className={`guns-discord-status-dot status-${status}`}
-            title={`Durum: ${status}`}
+            title={`Durum: ${discordStatusLabel(status)}`}
           />
         </div>
 
@@ -1515,6 +1539,25 @@ export function DiscordPresence({
           <div className="guns-discord-name-row">
             <span className="guns-discord-display-name">{displayName}</span>
             <span className="guns-discord-username">@{username}</span>
+            {clanTag ? (
+              <span
+                className="guns-discord-clan-tag"
+                title={`Discord klan etiketi: ${clanTag}`}
+                aria-label={`Discord klan etiketi ${clanTag}`}
+              >
+                {clanBadgeUrl ? (
+                  <img
+                    src={clanBadgeUrl}
+                    alt=""
+                    className="guns-discord-clan-badge"
+                    onError={(event) => {
+                      event.currentTarget.hidden = true;
+                    }}
+                  />
+                ) : null}
+                <span>{clanTag}</span>
+              </span>
+            ) : null}
             {badges.length > 0 ? (
               <div
                 className="guns-discord-badges-row"
@@ -1538,7 +1581,7 @@ export function DiscordPresence({
           {gameActivity ? (
             <div className="guns-discord-activity is-game has-art">
               <span className="guns-discord-activity-text" title={gameActivity.name}>
-                Playing <b>{gameActivity.name}</b>
+                Oynuyor <b>{gameActivity.name}</b>
               </span>
               <MiniGamePlaytime start={gameActivity.timestamps?.start} />
               <span className="guns-discord-activity-gap" aria-hidden="true" />
@@ -1551,10 +1594,10 @@ export function DiscordPresence({
             <div className="guns-discord-activity is-spotify has-art">
               <span className="guns-discord-activity-lines">
                 <span className="guns-discord-activity-listen">
-                  Listening to <b title={`${spotify.song} - ${spotify.artist}`}>{spotify.song}</b>
+                  Dinliyor <b title={`${spotify.song} - ${spotify.artist}`}>{spotify.song}</b>
                 </span>
                 <span className="guns-discord-activity-by" title={cleanArtist}>
-                  by {cleanArtist}
+                  {cleanArtist ? `Sanatçı: ${cleanArtist}` : ""}
                 </span>
               </span>
               <span className="guns-discord-activity-gap" aria-hidden="true" />

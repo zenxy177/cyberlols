@@ -633,5 +633,13 @@ assert.strictEqual(normalizeProfile({ links_layout: "invalid" as unknown }).link
 assert.strictEqual(normalizeProfile({ links_layout: 123 as unknown }).links_layout, "dock");
 assert.strictEqual(normalizeProfile({ links_layout: null as unknown }).links_layout, "dock");
 assert.strictEqual(normalizeProfile({ links_layout: undefined }).links_layout, "dock");
+assert.strictEqual(EMPTY_PROFILE.entrance_effect_preset, "signal_sweep");
+assert.strictEqual(normalizeProfile({}).entrance_effect_preset, "signal_sweep");
+assert.strictEqual(normalizeProfile({ entrance_effect_preset: "dial_lock" }).entrance_effect_preset, "dial_lock");
+assert.strictEqual(normalizeProfile({ entrance_effect_preset: "wave_pulse" }).entrance_effect_preset, "wave_pulse");
+assert.strictEqual(normalizeProfile({ entrance_effect_preset: "invalid" }).entrance_effect_preset, "signal_sweep");
+assert.strictEqual(EMPTY_PROFILE.background_video_audio_fallback, "video");
+assert.strictEqual(normalizeProfile({ background_video_audio_fallback: "music" }).background_video_audio_fallback, "music");
+assert.strictEqual(normalizeProfile({ background_video_audio_fallback: "invalid" }).background_video_audio_fallback, "video");
 
 console.log("All tests passed successfully!");

@@ -35,6 +35,7 @@ export function GunsView({
   state,
 }: GunsViewProps) {
   const [entered, setEntered] = useState(false);
+  const [videoAudioActive, setVideoAudioActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const displayName =
@@ -42,12 +43,8 @@ export function GunsView({
   const effectiveAvatar = avatarUrl || discordAvatarUrl;
 
   const hasExplicitAudio = Boolean(profile.audio_url);
-  const hasVideoAudio = !hasExplicitAudio && Boolean(backgroundVideoUrl);
-  const hasAudioSource = hasExplicitAudio || hasVideoAudio;
-
-  const audioTitle =
-    profile.audio_title?.trim() ||
-    (hasVideoAudio ? "Video Sesi" : "Arka Plan Müziği");
+  const hasVideo = Boolean(backgroundVideoUrl);
+  const hasAudioSource = hasExplicitAudio || hasVideo;
 
   const cardBg = hexToRgba(
     profile.surface_color,
@@ -72,14 +69,6 @@ export function GunsView({
         text={profile.click_to_enter_text || "click to enter"}
         onEnter={() => {
           setEntered(true);
-          if (hasVideoAudio && videoRef.current) {
-            videoRef.current.muted = false;
-            videoRef.current.volume = Math.max(
-              0,
-              Math.min(1, (profile.default_volume ?? 50) / 100)
-            );
-            videoRef.current.play().catch(() => {});
-          }
         }}
       />
 
@@ -94,7 +83,7 @@ export function GunsView({
             }}
             autoPlay
             loop
-            muted={!entered || hasExplicitAudio}
+            muted={!entered || (hasExplicitAudio && !videoAudioActive)}
             playsInline
             src={backgroundVideoUrl}
             poster={backgroundUrl || undefined}
@@ -117,14 +106,19 @@ export function GunsView({
         <LunarEffects enabled={profile.enable_lunar_effects} />
       </div>
 
-      <div className={`guns-stage-wrapper${entered ? " is-entered" : ""}`}>
+      <div
+        className={`guns-stage-wrapper${entered ? " is-entered" : ""}`}
+        data-entrance-effect={profile.entrance_effect_preset}
+      >
         {/* Corner Controls: Volume (top-left), Share (bottom-right) */}
         <div className="guns-corner guns-corner-tl">
           {hasAudioSource ? (
             <AudioPlayer
               audioUrl={hasExplicitAudio ? profile.audio_url : null}
-              videoRef={hasVideoAudio ? videoRef : undefined}
-              title={audioTitle}
+              videoRef={hasVideo ? videoRef : undefined}
+              videoAudioFallback={profile.background_video_audio_fallback}
+              onVideoAudioChange={setVideoAudioActive}
+              title={profile.audio_title?.trim() || "Arka Plan Sesi"}
               artist={profile.audio_artist}
               defaultVolume={profile.default_volume}
               shouldPlay={entered}
@@ -147,6 +141,11 @@ export function GunsView({
               ["--card-scrim-alpha" as string]: cardScrim.toFixed(3),
             }}
           >
+            <div className="receiver-readout" aria-hidden="true">
+              <span className="receiver-live-indicator">CANLI SİNYAL</span>
+              <span className="receiver-frequency">88.4 <small>FM</small></span>
+            </div>
+
             {/* Views counter: bottom-left inside card */}
             <div className="guns-card-corner-views">
               <ViewsCounter initialCount={profile.views_count} />
@@ -190,21 +189,6 @@ export function GunsView({
               {profile.headline.trim() ? (
                 <p className="guns-card-headline">{profile.headline}</p>
               ) : null}
-
-              {/* Typewriter animated bio */}
-              <div className="guns-card-bio-section">
-                <TypewriterBio
-                  lines={profile.typewriter_lines}
-                  fallbackBio={profile.bio}
-                />
-              </div>
-
-              {profile.location.trim() ? (
-                <div className="guns-card-location">
-                  <MapPin size={13} className="guns-location-icon" aria-hidden="true" />
-                  <span>{profile.location}</span>
-                </div>
-              ) : null}
             </div>
 
             {/* Discord Presence Section */}
@@ -224,6 +208,22 @@ export function GunsView({
             {/* Compact Social Badges Grid */}
             <div className="guns-card-badges-section">
               <SocialBadges links={links} layout={profile.links_layout || "dock"} />
+            </div>
+
+            <div className="guns-card-extra">
+              <div className="guns-card-bio-section">
+                <TypewriterBio
+                  lines={profile.typewriter_lines}
+                  fallbackBio={profile.bio}
+                />
+              </div>
+
+              {profile.location.trim() ? (
+                <div className="guns-card-location">
+                  <MapPin size={13} className="guns-location-icon" aria-hidden="true" />
+                  <span>{profile.location}</span>
+                </div>
+              ) : null}
             </div>
           </ProfileCard>
         </main>

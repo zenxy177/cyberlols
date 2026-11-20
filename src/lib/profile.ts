@@ -27,6 +27,8 @@ export type CursorTrail =
 export type DiscordBadgeMode = "auto" | "custom" | "both";
 
 export type LinksLayout = "dock" | "buttons";
+export type EntranceEffectPreset = "signal_sweep" | "dial_lock" | "wave_pulse";
+export type VideoAudioFallback = "video" | "music";
 
 export type ProfileLink = {
   id: string;
@@ -44,7 +46,9 @@ export type Profile = {
   background_url: string | null;
   background_video_url: string | null;
   background_video_opacity: number;
+  background_video_audio_fallback: VideoAudioFallback;
   card_opacity: number;
+  entrance_effect_preset: EntranceEffectPreset;
   discord_user_id: string | null;
   discord_username: string | null;
   discord_global_name: string | null;
@@ -85,7 +89,9 @@ export const EMPTY_PROFILE: Profile = {
   background_url: null,
   background_video_url: null,
   background_video_opacity: 70,
+  background_video_audio_fallback: "video",
   card_opacity: 75,
+  entrance_effect_preset: "signal_sweep",
   audio_url: null,
   audio_title: "Arka Plan Müziği",
   audio_artist: "",
@@ -182,6 +188,13 @@ export function normalizeProfile(value: unknown): Profile {
   return {
     ...EMPTY_PROFILE,
     ...row,
+    background_video_audio_fallback:
+      row.background_video_audio_fallback === "music" ? "music" : "video",
+    entrance_effect_preset:
+      row.entrance_effect_preset === "dial_lock" ||
+      row.entrance_effect_preset === "wave_pulse"
+        ? row.entrance_effect_preset
+        : "signal_sweep",
     id: "main",
     display_name: typeof row.display_name === "string" ? row.display_name : "",
     headline: typeof row.headline === "string" ? row.headline : "",

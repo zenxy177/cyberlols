@@ -47,6 +47,7 @@ import {
   type CardBorderEffect,
   type CursorStyle,
   type CursorTrail,
+  type EntranceEffectPreset,
   type NameEffect,
   type Profile,
   type ProfileLink,
@@ -256,6 +257,28 @@ const CURSOR_TRAIL_PRESETS: Array<{
     id: "none",
     title: "🚫 İz Yok",
     desc: "Yalnızca imleç görünür, arkasında iz bırakmaz",
+  },
+];
+
+const ENTRANCE_EFFECT_PRESETS: Array<{
+  id: EntranceEffectPreset;
+  title: string;
+  description: string;
+}> = [
+  {
+    id: "signal_sweep",
+    title: "Sinyal Taraması",
+    description: "Video ışığı ve profil yüzeyi aynı anda açılır.",
+  },
+  {
+    id: "dial_lock",
+    title: "Frekans Kilidi",
+    description: "İnce bir tarama çizgisi profili netleştirir.",
+  },
+  {
+    id: "wave_pulse",
+    title: "Dalga Darbesi",
+    description: "Sinyal halkası genişlerken profil görünür olur.",
   },
 ];
 
@@ -783,7 +806,10 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       const fullPayload = {
         ...formWithoutViews,
         background_video_opacity: safeBgVideoOpacity,
+        background_video_audio_fallback:
+          form.background_video_audio_fallback === "music" ? "music" : "video",
         card_opacity: safeCardOpacity,
+        entrance_effect_preset: form.entrance_effect_preset || "signal_sweep",
         display_name: form.display_name.trim(),
         headline: form.headline.trim(),
         bio: form.bio.trim(),
@@ -877,7 +903,10 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         links_layout: form.links_layout === "buttons" ? "buttons" : "dock",
         default_volume: safeVolume,
         background_video_opacity: safeBgVideoOpacity,
+        background_video_audio_fallback:
+          form.background_video_audio_fallback === "music" ? "music" : "video",
         card_opacity: safeCardOpacity,
+        entrance_effect_preset: form.entrance_effect_preset || "signal_sweep",
         typewriter_lines:
           cleanTypewriterLines.length > 0
             ? cleanTypewriterLines
@@ -924,7 +953,9 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
     const sql = `alter table public.profiles
   add column if not exists background_video_url text,
   add column if not exists background_video_opacity integer not null default 70,
+  add column if not exists background_video_audio_fallback text not null default 'video',
   add column if not exists card_opacity integer not null default 75,
+  add column if not exists entrance_effect_preset text not null default 'signal_sweep',
   add column if not exists audio_url text,
   add column if not exists audio_title text not null default 'Arka Plan Müziği',
   add column if not exists audio_artist text not null default '',
@@ -1099,7 +1130,7 @@ notify pgrst, 'reload schema';`;
 
   // Audio source identification
   const hasExplicitAudio = Boolean(form.audio_url);
-  const hasVideoAudio = !hasExplicitAudio && Boolean(form.background_video_url);
+  const hasVideo = Boolean(form.background_video_url);
 
   return (
     <div className="studio-dashboard">
@@ -1254,10 +1285,12 @@ notify pgrst, 'reload schema';`;
           </div>
           <div className="stat-card-body">
             <span className="stat-title-highlight">
-              {hasExplicitAudio
-                ? "Özel MP3 Yüklü"
-                : hasVideoAudio
-                  ? "MP4 Video Sesi Aktif"
+              {hasVideo
+                ? hasExplicitAudio
+                  ? "Video öncelikli · MP3 yedeği"
+                  : "Video sesi"
+                : hasExplicitAudio
+                  ? "Özel MP3"
                   : "Ses Yok"}
             </span>
             <span className="stat-subtext">
@@ -1698,6 +1731,32 @@ notify pgrst, 'reload schema';`;
                   </div>
                 </div>
 
+                <section className="entrance-presets-section" aria-labelledby="entrance-presets-heading">
+                  <div className="section-title-wrap">
+                    <h4 id="entrance-presets-heading">Açılış Senaryosu</h4>
+                    <span className="field-hint">
+                      Giriş tıklamasında video ve profil kartı birlikte açılır.
+                    </span>
+                  </div>
+                  <div className="entrance-preset-grid">
+                    {ENTRANCE_EFFECT_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        aria-pressed={form.entrance_effect_preset === preset.id}
+                        className={`entrance-preset-option${form.entrance_effect_preset === preset.id ? " is-active" : ""}`}
+                        onClick={() => update("entrance_effect_preset", preset.id)}
+                      >
+                        <span className="entrance-preset-mark" aria-hidden="true" />
+                        <span className="entrance-preset-copy">
+                          <strong>{preset.title}</strong>
+                          <span>{preset.description}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
                 {/* Cyber Colors & Preset Themes */}
                 <div className="studio-colors-section">
                   <div className="section-title-wrap">
@@ -1793,13 +1852,38 @@ notify pgrst, 'reload schema';`;
                   <div className="studio-callout-box">
                     <Music size={18} className="callout-icon" />
                     <div className="callout-text">
-                      <strong>MP4 Video Sesi Aktif</strong>
+                      <strong>Video sesi önce denenir</strong>
                       <p>
-                        Yüklediğin arka plan videosunun içindeki ses otomatik olarak algılandı.
-                        Ayrı bir MP3 yüklemezsen, video sesi açılır ve üst bardaki ses kontrolcüsüyle
-                        yönetilir.
+                        Tarayıcı video ses kanalını algılayabiliyorsa video sesi kullanılır; video
+                        sessizse eklediğin parça video ile birlikte başlar. Algılama desteklenmiyorsa
+                        aşağıdaki yedek kaynak seçimi kullanılır.
                       </p>
                     </div>
+                  </div>
+                ) : null}
+
+                {form.background_video_url ? (
+                  <div className="cyber-field audio-fallback-field">
+                    <label className="cyber-label" htmlFor="video-audio-fallback">
+                      <span>Ses algılanamazsa kullanılacak kaynak</span>
+                      <span className="field-hint">
+                        Video sesi içermiyorsa eklediğin şarkıyı yedek olarak kullan.
+                      </span>
+                    </label>
+                    <select
+                      id="video-audio-fallback"
+                      className="cyber-input"
+                      value={form.background_video_audio_fallback}
+                      onChange={(event) =>
+                        update(
+                          "background_video_audio_fallback",
+                          event.target.value === "music" ? "music" : "video",
+                        )
+                      }
+                    >
+                      <option value="video">Arka plan videosunun sesini kullan</option>
+                      <option value="music">Eklediğim şarkıyı kullan</option>
+                    </select>
                   </div>
                 ) : null}
 
@@ -2923,6 +3007,7 @@ notify pgrst, 'reload schema';`;
                   className={`guns-main-card simulator-main-card ${
                     form.enable_lunar_effects ? "has-lunar-aura" : ""
                   } border-fx-${form.card_border_effect || "lunar_aurora"}`}
+                  data-entrance-effect={form.entrance_effect_preset}
                   style={(() => {
                     const cardBg = hexToRgba(
                       form.surface_color,
@@ -2937,6 +3022,10 @@ notify pgrst, 'reload schema';`;
                     };
                   })()}
                 >
+                  <div className="receiver-readout" aria-hidden="true">
+                    <span className="receiver-live-indicator">CANLI SİNYAL</span>
+                    <span className="receiver-frequency">88.4 <small>FM</small></span>
+                  </div>
                   {/* Avatar */}
                   <div className="guns-card-avatar-wrap">
                     <div className="guns-card-avatar-glow" aria-hidden="true" />

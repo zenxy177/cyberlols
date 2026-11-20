@@ -64,7 +64,7 @@ export function ClickToEnter({
           <Volume2 className="click-to-enter-icon" size={26} strokeWidth={1.7} />
         </div>
         <p className="click-to-enter-text">{text}</p>
-        <span className="click-to-enter-subtext">[ click anywhere to continue ]</span>
+        <span className="click-to-enter-subtext">SİNYALİ AÇMAK İÇİN TIKLA</span>
       </div>
     </div>
   );

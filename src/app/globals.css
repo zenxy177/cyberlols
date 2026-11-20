@@ -7857,3 +7857,643 @@ textarea:focus-visible {
     transform: none;
   }
 }
+
+/* Short-wave receiver visual system */
+.guns-backdrop-default {
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(116, 87, 47, 0.24), transparent 56%),
+    radial-gradient(ellipse at 50% 100%, #12130f 0%, #080a08 70%);
+}
+
+.guns-backdrop-vignette {
+  background: radial-gradient(circle at center, transparent 34%, rgba(5, 7, 5, 0.78) 100%);
+}
+
+.click-to-enter-overlay {
+  background: rgba(8, 10, 7, 0.42);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  transition:
+    opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0.65s;
+}
+
+.click-to-enter-overlay:focus-visible {
+  outline: 2px solid #eabb72;
+  outline-offset: -10px;
+}
+
+.click-to-enter-content {
+  gap: 18px;
+  animation: none;
+}
+
+.click-to-enter-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  background: rgba(17, 20, 14, 0.82);
+  border: 1px solid rgba(237, 187, 111, 0.42);
+  color: #eabb72;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.36), 0 0 18px rgba(216, 164, 83, 0.14);
+}
+
+.click-to-enter-text {
+  color: #fff3dc;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.7);
+  letter-spacing: 0.18em;
+}
+
+.click-to-enter-subtext {
+  color: #cfcca9;
+  letter-spacing: 0.1em;
+}
+
+.guns-stage-wrapper {
+  opacity: 1;
+  filter: none;
+  transition: none;
+}
+
+.guns-stage-wrapper.is-entered {
+  opacity: 1;
+  filter: none;
+}
+
+.guns-main-card {
+  width: min(100%, 520px);
+  border-radius: 17px;
+  border: 1px solid rgba(229, 179, 104, 0.4);
+  background:
+    linear-gradient(145deg, rgba(28, 29, 22, 0.72), rgba(13, 16, 13, 0.82)),
+    var(--card-surface-rgba, rgba(14, 16, 24, 0.68));
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.58),
+    0 8px 18px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 242, 211, 0.11);
+}
+
+.guns-main-card::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  z-index: 1;
+  border: 1px solid rgba(187, 190, 139, 0.13);
+  border-radius: 11px;
+  pointer-events: none;
+}
+
+.guns-card-inner {
+  padding: 58px clamp(18px, 3.5vw, 32px) 28px;
+  gap: clamp(10px, 1.5vh, 16px);
+}
+
+.receiver-readout {
+  position: absolute;
+  z-index: 5;
+  top: 21px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #d7cca7;
+  font-family: var(--mono);
+  pointer-events: none;
+}
+
+.receiver-live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #bcc7a0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.receiver-live-indicator::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #b6c886;
+  box-shadow: 0 0 7px rgba(182, 200, 134, 0.55);
+}
+
+.receiver-frequency {
+  color: #f0c47e;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.receiver-frequency small {
+  margin-left: 3px;
+  color: #c9c4a4;
+  font-size: 9px;
+  letter-spacing: 0.13em;
+}
+
+.guns-card-avatar-frame {
+  border-color: rgba(231, 189, 121, 0.55);
+  box-shadow: 0 7px 22px rgba(0, 0, 0, 0.38), 0 0 15px rgba(216, 164, 83, 0.16);
+}
+
+.guns-card-avatar-glow {
+  background: radial-gradient(circle, #c99c5c 0%, transparent 70%);
+  opacity: 0.22;
+  animation: none;
+}
+
+.guns-card-extra {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+}
+
+.guns-main-card.has-lunar-aura {
+  border-color: rgba(229, 179, 104, 0.4);
+  box-shadow:
+    0 24px 54px rgba(0, 0, 0, 0.58),
+    0 8px 18px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 242, 211, 0.11);
+}
+
+.guns-card-name {
+  color: #fff2d7;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
+}
+
+.guns-discord-badge {
+  border: 0;
+  border-top: 1px solid rgba(215, 173, 109, 0.24);
+  border-bottom: 1px solid rgba(215, 173, 109, 0.24);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.guns-discord-badge:hover {
+  border-color: rgba(215, 173, 109, 0.46);
+  background: rgba(215, 173, 109, 0.035);
+}
+
+.guns-discord-display-name {
+  color: #f3ead4;
+}
+
+.guns-discord-username {
+  color: #c9c4ad;
+}
+
+.guns-discord-status-text {
+  color: #c3c6a9;
+}
+
+.guns-discord-clan-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 18px;
+  padding: 1px 6px;
+  border: 1px solid rgba(215, 173, 109, 0.32);
+  border-radius: 4px;
+  background: rgba(215, 173, 109, 0.1);
+  color: #f0c47e;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+}
+
+.guns-discord-clan-badge {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+}
+
+.guns-card-headline,
+.guns-typewriter-container {
+  color: #e1dcc7;
+}
+
+.guns-card-location {
+  color: #c6c7ad;
+}
+
+.guns-views-icon,
+.guns-views-number {
+  color: #d8b274;
+}
+
+.guns-audio-mute-button {
+  background: rgba(18, 20, 15, 0.88);
+  border-color: rgba(229, 179, 104, 0.36);
+  color: #e6c27f;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.36);
+}
+
+.guns-audio-mute-button:hover {
+  color: #fff1d2;
+  border-color: rgba(229, 179, 104, 0.72);
+}
+
+.guns-audio-popover {
+  background: rgba(17, 20, 14, 0.96);
+  border-color: rgba(229, 179, 104, 0.3);
+}
+
+.guns-audio-volume-slider {
+  accent-color: #e3b46e;
+}
+
+.guns-stage-wrapper.is-entered[data-entrance-effect="signal_sweep"] .guns-main-card {
+  animation: receiverSignalSweep 850ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.guns-stage-wrapper.is-entered[data-entrance-effect="dial_lock"] .guns-main-card {
+  animation: receiverDialLock 920ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.guns-stage-wrapper.is-entered[data-entrance-effect="wave_pulse"] .guns-main-card {
+  animation: receiverWavePulse 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.guns-stage-wrapper.is-entered[data-entrance-effect="dial_lock"]::before {
+  content: "";
+  position: fixed;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(220, 184, 116, 0.72), transparent);
+  box-shadow: 0 0 18px rgba(220, 184, 116, 0.32);
+  animation: receiverDialScan 780ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes receiverSignalSweep {
+  from {
+    opacity: 0.82;
+    transform: translateY(8px) scale(0.99);
+    filter: blur(4px);
+    clip-path: inset(0 0 42% 0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+    clip-path: inset(0);
+  }
+}
+
+@keyframes receiverDialLock {
+  from {
+    opacity: 0.78;
+    transform: translateY(10px) rotateX(3deg);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes receiverWavePulse {
+  from {
+    opacity: 0.8;
+    transform: scale(0.97);
+    box-shadow: 0 0 0 0 rgba(219, 180, 112, 0.18);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.58), 0 8px 18px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes receiverDialScan {
+  from { transform: translateY(-4px); opacity: 0; }
+  12% { opacity: 1; }
+  to { transform: translateY(100vh); opacity: 0; }
+}
+
+/* Admin control room */
+.admin-stage.guns-admin-theme {
+  padding: 30px 32px 132px;
+  background-color: #0c0e0a;
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(187, 144, 77, 0.13), transparent 54%),
+    linear-gradient(rgba(185, 190, 148, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(185, 190, 148, 0.035) 1px, transparent 1px);
+  background-size: auto, 32px 32px, 32px 32px;
+  color: #eee8d7;
+}
+
+.admin-shell {
+  max-width: 1440px;
+  gap: 28px;
+}
+
+.admin-cyber-header,
+.cyber-stat-card,
+.studio-panel-pane,
+.studio-tabs-bar,
+.simulator-frame {
+  background: rgba(19, 22, 17, 0.94);
+  border-color: rgba(193, 172, 125, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+  backdrop-filter: none;
+}
+
+.admin-cyber-header {
+  padding: 15px 20px;
+  border-color: rgba(217, 178, 111, 0.3);
+}
+
+.admin-cyber-mark {
+  border-radius: 8px;
+  background: rgba(223, 180, 106, 0.1);
+  border-color: rgba(223, 180, 106, 0.36);
+  box-shadow: none;
+}
+
+.brand-moon-icon,
+.brand-badge,
+.admin-owner-pill,
+.pill-icon {
+  color: #e4bc79;
+  filter: none;
+}
+
+.brand-badge,
+.admin-owner-pill {
+  background: rgba(223, 180, 106, 0.1);
+  border-color: rgba(223, 180, 106, 0.28);
+}
+
+.admin-cyber-pill.status-pill.is-live {
+  color: #c1d19a;
+  background: rgba(153, 174, 111, 0.12);
+  border-color: rgba(153, 174, 111, 0.3);
+}
+
+.admin-cyber-pill.status-pill.is-live .signal-dot {
+  background: #b2c381;
+  box-shadow: 0 0 7px rgba(178, 195, 129, 0.45);
+}
+
+.admin-view-profile-btn,
+.studio-btn-secondary {
+  border-color: rgba(193, 172, 125, 0.28);
+  background: rgba(223, 180, 106, 0.07);
+}
+
+.admin-view-profile-btn:hover,
+.studio-btn-secondary:hover:not(:disabled) {
+  border-color: rgba(223, 180, 106, 0.56);
+  background: rgba(223, 180, 106, 0.13);
+}
+
+.studio-stats-grid {
+  gap: 12px;
+}
+
+.cyber-stat-card {
+  border-radius: 9px;
+  border-color: rgba(193, 172, 125, 0.17);
+}
+
+.stat-card-title,
+.stat-subtext {
+  color: #c4c0aa;
+}
+
+.stat-number,
+.stat-title-highlight {
+  color: #f2e7ce;
+}
+
+.stat-pulse-beacon,
+.studio-btn-primary,
+.studio-btn-save {
+  background: #d7ad6d;
+  border-color: #d7ad6d;
+  color: #19160f;
+  box-shadow: none;
+}
+
+.studio-btn-primary:hover:not(:disabled),
+.studio-btn-save:hover:not(:disabled) {
+  background: #edc784;
+  border-color: #edc784;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.24);
+}
+
+.studio-tabs-bar {
+  border-radius: 9px;
+  background: #11140f;
+}
+
+.studio-tab-btn {
+  border-radius: 6px;
+  color: #b6b7a5;
+}
+
+.studio-tab-btn.is-active {
+  color: #fff1d2;
+  background: rgba(219, 180, 112, 0.12);
+  border-color: rgba(219, 180, 112, 0.28);
+  box-shadow: none;
+}
+
+.studio-panel-pane {
+  border-radius: 10px;
+  border-color: rgba(193, 172, 125, 0.19);
+}
+
+.pane-header h3,
+.section-title-wrap h4 {
+  color: #f1e7d0;
+}
+
+.pane-header p,
+.field-hint {
+  color: #c2bea9;
+}
+
+.cyber-input,
+.cyber-textarea {
+  background: #10130f;
+  border-color: rgba(193, 172, 125, 0.24);
+  color: #f1ecd9;
+}
+
+.cyber-input:focus,
+.cyber-textarea:focus {
+  border-color: #d7ad6d;
+  box-shadow: 0 0 0 2px rgba(215, 173, 109, 0.2);
+  background: #12150f;
+}
+
+.studio-asset-card,
+.studio-opacity-section,
+.effect-toggle-card,
+.discord-oauth-card {
+  background: rgba(12, 15, 11, 0.76);
+  border-color: rgba(193, 172, 125, 0.18);
+}
+
+.studio-callout-box {
+  background: rgba(153, 174, 111, 0.09);
+  border-color: rgba(153, 174, 111, 0.24);
+}
+
+.callout-icon,
+.callout-text strong,
+.callout-text p {
+  color: #d0d5aa;
+}
+
+.studio-sticky-bar {
+  background: rgba(16, 19, 14, 0.97);
+  border-color: rgba(215, 173, 109, 0.3);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.42);
+}
+
+.entrance-presets-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(193, 172, 125, 0.2);
+  border-radius: 10px;
+  background: rgba(12, 15, 11, 0.76);
+}
+
+.entrance-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.entrance-preset-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 82px;
+  padding: 12px;
+  border: 1px solid rgba(193, 172, 125, 0.2);
+  border-radius: 8px;
+  background: #11140f;
+  color: #e9e3d1;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.entrance-preset-option:hover {
+  border-color: rgba(223, 180, 106, 0.55);
+  background: rgba(223, 180, 106, 0.07);
+  transform: translateY(-1px);
+}
+
+.entrance-preset-option.is-active {
+  border-color: #d7ad6d;
+  background: rgba(223, 180, 106, 0.1);
+}
+
+.entrance-preset-option:focus-visible {
+  outline: 2px solid #e6c181;
+  outline-offset: 3px;
+}
+
+.entrance-preset-mark {
+  width: 10px;
+  height: 10px;
+  margin-top: 3px;
+  flex: 0 0 auto;
+  border: 1px solid #aeb78a;
+  border-radius: 50%;
+}
+
+.entrance-preset-option.is-active .entrance-preset-mark {
+  background: #b7c58b;
+  border-color: #b7c58b;
+  box-shadow: 0 0 0 3px rgba(183, 197, 139, 0.15);
+}
+
+.entrance-preset-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.entrance-preset-copy strong {
+  color: #f2e7ce;
+  font-size: 12px;
+}
+
+.entrance-preset-copy span {
+  color: #c2bea9;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.audio-fallback-field {
+  padding: 14px;
+  border: 1px solid rgba(193, 172, 125, 0.2);
+  border-radius: 9px;
+  background: rgba(12, 15, 11, 0.76);
+}
+
+@media (max-width: 760px) {
+  .admin-stage.guns-admin-theme {
+    padding: 16px 14px 150px;
+  }
+
+  .admin-cyber-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-cyber-header-left,
+  .admin-cyber-header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .admin-cyber-header-right {
+    flex-wrap: wrap;
+  }
+
+  .entrance-preset-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .entrance-preset-option {
+    min-height: unset;
+  }
+
+  .guns-card-inner {
+    padding-top: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guns-stage-wrapper.is-entered .guns-main-card,
+  .guns-stage-wrapper.is-entered::before {
+    animation: none !important;
+  }
+
+  .entrance-preset-option,
+  .click-to-enter-overlay {
+    transition: none;
+  }
+}
