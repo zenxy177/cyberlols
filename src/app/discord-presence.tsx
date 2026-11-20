@@ -8,6 +8,14 @@ import {
   resolveDiscordBadges,
 } from "@/lib/discord-badges";
 
+export type DiscordPresenceAppearance = {
+  width: number;
+  padding: number;
+  avatarSize: number;
+  artSize: number;
+  textScale: number;
+};
+
 type DiscordPresenceProps = {
   discordUserId: string;
   fallbackUsername?: string | null;
@@ -15,6 +23,7 @@ type DiscordPresenceProps = {
   fallbackAvatarUrl?: string | null;
   customBadges?: string[] | null;
   badgeMode?: DiscordBadgeMode;
+  appearance?: DiscordPresenceAppearance;
 };
 
 export type PresenceSpotify = {
@@ -1362,6 +1371,7 @@ export function DiscordPresence({
   fallbackAvatarUrl,
   customBadges,
   badgeMode = "auto",
+  appearance,
 }: DiscordPresenceProps) {
   const [data, setData] = useState<PresenceData | null>(null);
   const avatarImageRef = useRef<HTMLImageElement | null>(null);
@@ -1504,9 +1514,42 @@ export function DiscordPresence({
     clanTag && primaryGuild?.identity_guild_id && primaryGuild.badge
       ? `https://cdn.discordapp.com/clan-badges/${encodeURIComponent(primaryGuild.identity_guild_id)}/${encodeURIComponent(primaryGuild.badge)}.png?size=32`
       : null;
+  const avatarSize = appearance?.avatarSize ?? 72;
+  const textScale = appearance?.textScale ?? 100;
 
   return (
-    <div className="guns-discord-wrapper">
+    <div
+      className="guns-discord-wrapper"
+      style={{
+        ["--discord-presence-width" as string]: `${appearance?.width ?? 100}%`,
+        ["--discord-presence-padding" as string]: `${appearance?.padding ?? 12}px ${(
+          appearance?.padding ?? 12
+        ) + 2}px`,
+        ["--discord-presence-avatar-size" as string]: `${avatarSize}px`,
+        ["--discord-presence-avatar-initial-size" as string]: `${Math.max(
+          14,
+          avatarSize * 0.28,
+        )}px`,
+        ["--discord-presence-art-size" as string]: `${appearance?.artSize ?? 68}px`,
+        ["--discord-presence-art-monogram-size" as string]: `${Math.max(
+          12,
+          (appearance?.artSize ?? 68) * 0.2,
+        )}px`,
+        ["--discord-presence-gap" as string]: `${Math.max(
+          8,
+          Math.round(avatarSize * 0.19),
+        )}px`,
+        ["--discord-presence-name-size" as string]: `${18 * (textScale / 100)}px`,
+        ["--discord-presence-username-size" as string]: `${13 * (textScale / 100)}px`,
+        ["--discord-presence-activity-size" as string]: `${14 * (textScale / 100)}px`,
+        ["--discord-presence-time-size" as string]: `${10 * (textScale / 100)}px`,
+        ["--discord-presence-status-size" as string]: `${9 * (textScale / 100)}px`,
+        ["--discord-presence-status-dot-size" as string]: `${Math.max(
+          14,
+          Math.min(24, avatarSize * 0.3),
+        )}px`,
+      }}
+    >
       {/* Discord Profile Pill */}
       <a
         href={`https://discord.com/users/${encodeURIComponent(discordUserId)}`}

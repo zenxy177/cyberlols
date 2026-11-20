@@ -20,6 +20,7 @@ import {
   Play,
   Plus,
   Save,
+  SlidersHorizontal,
   Smartphone,
   Sparkles,
   Tablet,
@@ -39,6 +40,7 @@ import {
   type ChangeEvent,
 } from "react";
 import {
+  EMPTY_PROFILE,
   cardScrimAlpha,
   clampNumber,
   hexToRgba,
@@ -280,6 +282,25 @@ const ENTRANCE_EFFECT_PRESETS: Array<{
     title: "Dalga Darbesi",
     description: "Sinyal halkası genişlerken profil görünür olur.",
   },
+];
+
+const DISCORD_PRESENCE_CONTROLS: Array<{
+  key:
+    | "discord_presence_width"
+    | "discord_presence_padding"
+    | "discord_presence_avatar_size"
+    | "discord_presence_art_size"
+    | "discord_presence_text_scale";
+  label: string;
+  min: number;
+  max: number;
+  unit: string;
+}> = [
+  { key: "discord_presence_width", label: "Bölüm genişliği", min: 70, max: 100, unit: "%" },
+  { key: "discord_presence_padding", label: "İç boşluk", min: 4, max: 24, unit: " px" },
+  { key: "discord_presence_avatar_size", label: "Discord avatarı", min: 36, max: 80, unit: " px" },
+  { key: "discord_presence_art_size", label: "Etkinlik görseli", min: 36, max: 80, unit: " px" },
+  { key: "discord_presence_text_scale", label: "Yazı boyutu", min: 80, max: 120, unit: "%" },
 ];
 
 type StudioTab = "identity" | "design" | "audio" | "effects" | "discord" | "socials" | "analytics";
@@ -536,6 +557,18 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
 
   function update<K extends keyof Profile>(key: K, value: Profile[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+    setEditorState({ kind: "idle", message: "" });
+  }
+
+  function resetDiscordPresenceLayout() {
+    setForm((current) => ({
+      ...current,
+      discord_presence_width: EMPTY_PROFILE.discord_presence_width,
+      discord_presence_padding: EMPTY_PROFILE.discord_presence_padding,
+      discord_presence_avatar_size: EMPTY_PROFILE.discord_presence_avatar_size,
+      discord_presence_art_size: EMPTY_PROFILE.discord_presence_art_size,
+      discord_presence_text_scale: EMPTY_PROFILE.discord_presence_text_scale,
+    }));
     setEditorState({ kind: "idle", message: "" });
   }
 
@@ -798,6 +831,16 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       const safeVolume = clampNumber(form.default_volume, 50, 0, 100);
       const safeBgVideoOpacity = clampNumber(form.background_video_opacity, 70, 0, 100);
       const safeCardOpacity = clampNumber(form.card_opacity, 75, 10, 100);
+      const safePresenceWidth = clampNumber(form.discord_presence_width, 100, 70, 100);
+      const safePresencePadding = clampNumber(form.discord_presence_padding, 12, 4, 24);
+      const safePresenceAvatarSize = clampNumber(
+        form.discord_presence_avatar_size,
+        72,
+        36,
+        80,
+      );
+      const safePresenceArtSize = clampNumber(form.discord_presence_art_size, 68, 36, 80);
+      const safePresenceTextScale = clampNumber(form.discord_presence_text_scale, 100, 80, 120);
 
       // Omit views_count to avoid resetting counter
       const formWithoutViews: Record<string, unknown> = { ...form };
@@ -809,6 +852,11 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         background_video_audio_fallback:
           form.background_video_audio_fallback === "music" ? "music" : "video",
         card_opacity: safeCardOpacity,
+        discord_presence_width: safePresenceWidth,
+        discord_presence_padding: safePresencePadding,
+        discord_presence_avatar_size: safePresenceAvatarSize,
+        discord_presence_art_size: safePresenceArtSize,
+        discord_presence_text_scale: safePresenceTextScale,
         entrance_effect_preset: form.entrance_effect_preset || "signal_sweep",
         display_name: form.display_name.trim(),
         headline: form.headline.trim(),
@@ -906,6 +954,11 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         background_video_audio_fallback:
           form.background_video_audio_fallback === "music" ? "music" : "video",
         card_opacity: safeCardOpacity,
+        discord_presence_width: safePresenceWidth,
+        discord_presence_padding: safePresencePadding,
+        discord_presence_avatar_size: safePresenceAvatarSize,
+        discord_presence_art_size: safePresenceArtSize,
+        discord_presence_text_scale: safePresenceTextScale,
         entrance_effect_preset: form.entrance_effect_preset || "signal_sweep",
         typewriter_lines:
           cleanTypewriterLines.length > 0
@@ -977,6 +1030,11 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
   add column if not exists discord_username text,
   add column if not exists discord_global_name text,
   add column if not exists discord_avatar_url text,
+  add column if not exists discord_presence_width integer not null default 100 check (discord_presence_width between 70 and 100),
+  add column if not exists discord_presence_padding integer not null default 12 check (discord_presence_padding between 4 and 24),
+  add column if not exists discord_presence_avatar_size integer not null default 72 check (discord_presence_avatar_size between 36 and 80),
+  add column if not exists discord_presence_art_size integer not null default 68 check (discord_presence_art_size between 36 and 80),
+  add column if not exists discord_presence_text_scale integer not null default 100 check (discord_presence_text_scale between 80 and 120),
   add column if not exists discord_badges text[] not null default '{}',
   add column if not exists discord_badges_mode text not null default 'auto',
   add column if not exists links_layout text not null default 'dock';
@@ -2292,6 +2350,55 @@ notify pgrst, 'reload schema';`;
                   </p>
                 </div>
 
+                <section className="presence-layout-panel" aria-label="Discord Presence görünüm ayarları">
+                  <div className="presence-layout-heading">
+                    <div className="presence-layout-title">
+                      <SlidersHorizontal size={17} aria-hidden="true" />
+                      <div>
+                        <h4>Presence ölçüleri</h4>
+                        <p>Kaydırıcılar önizlemeyi anında günceller.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="presence-layout-reset"
+                      onClick={resetDiscordPresenceLayout}
+                      disabled={DISCORD_PRESENCE_CONTROLS.every(
+                        ({ key }) => form[key] === EMPTY_PROFILE[key],
+                      )}
+                    >
+                      Varsayılana dön
+                    </button>
+                  </div>
+                  <div className="presence-layout-controls">
+                    {DISCORD_PRESENCE_CONTROLS.map((control) => (
+                      <label className="presence-layout-control" key={control.key}>
+                        <span>{control.label}</span>
+                        <output htmlFor={control.key}>
+                          {form[control.key]}
+                          {control.unit}
+                        </output>
+                        <input
+                          id={control.key}
+                          type="range"
+                          min={control.min}
+                          max={control.max}
+                          step={1}
+                          value={form[control.key]}
+                          onChange={(event) =>
+                            update(control.key, Number(event.target.value))
+                          }
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  {!form.discord_user_id ? (
+                    <p className="presence-layout-note">
+                      Kart önizlemesi için aşağıdaki Discord Kullanıcı ID alanını doldurun.
+                    </p>
+                  ) : null}
+                </section>
+
                 {/* Presence Bot Status Banner */}
                 <div
                   className={`studio-lanyard-banner ${
@@ -3084,6 +3191,13 @@ notify pgrst, 'reload schema';`;
                         fallbackAvatarUrl={form.discord_avatar_url}
                         customBadges={form.discord_badges}
                         badgeMode={form.discord_badges_mode}
+                        appearance={{
+                          width: form.discord_presence_width,
+                          padding: form.discord_presence_padding,
+                          avatarSize: form.discord_presence_avatar_size,
+                          artSize: form.discord_presence_art_size,
+                          textScale: form.discord_presence_text_scale,
+                        }}
                       />
                     </div>
                   ) : null}
@@ -3103,6 +3217,18 @@ notify pgrst, 'reload schema';`;
 
             <div className="simulator-footer-hint">
               <span>Düzenlemeler anında önizlemeye yansır.</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("discord");
+                  document
+                    .querySelector(".studio-left-column")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                <SlidersHorizontal size={13} aria-hidden="true" />
+                Discord ölçülerini düzenle
+              </button>
             </div>
           </div>
         </aside>

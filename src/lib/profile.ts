@@ -53,6 +53,11 @@ export type Profile = {
   discord_username: string | null;
   discord_global_name: string | null;
   discord_avatar_url: string | null;
+  discord_presence_width: number;
+  discord_presence_padding: number;
+  discord_presence_avatar_size: number;
+  discord_presence_art_size: number;
+  discord_presence_text_scale: number;
   discord_badges: string[];
   discord_badges_mode: DiscordBadgeMode;
   accent_color: string;
@@ -113,6 +118,11 @@ export const EMPTY_PROFILE: Profile = {
   discord_username: null,
   discord_global_name: null,
   discord_avatar_url: null,
+  discord_presence_width: 100,
+  discord_presence_padding: 12,
+  discord_presence_avatar_size: 72,
+  discord_presence_art_size: 68,
+  discord_presence_text_scale: 100,
   discord_badges: [],
   discord_badges_mode: "auto",
   accent_color: "#78a7ff",
@@ -282,6 +292,36 @@ export function normalizeProfile(value: unknown): Profile {
       typeof row.discord_avatar_url === "string"
         ? row.discord_avatar_url
         : null,
+    discord_presence_width: clampNumber(
+      row.discord_presence_width,
+      EMPTY_PROFILE.discord_presence_width,
+      70,
+      100,
+    ),
+    discord_presence_padding: clampNumber(
+      row.discord_presence_padding,
+      EMPTY_PROFILE.discord_presence_padding,
+      4,
+      24,
+    ),
+    discord_presence_avatar_size: clampNumber(
+      row.discord_presence_avatar_size,
+      EMPTY_PROFILE.discord_presence_avatar_size,
+      36,
+      80,
+    ),
+    discord_presence_art_size: clampNumber(
+      row.discord_presence_art_size,
+      EMPTY_PROFILE.discord_presence_art_size,
+      36,
+      80,
+    ),
+    discord_presence_text_scale: clampNumber(
+      row.discord_presence_text_scale,
+      EMPTY_PROFILE.discord_presence_text_scale,
+      80,
+      120,
+    ),
     discord_badges: Array.isArray(row.discord_badges)
       ? row.discord_badges
           .filter(

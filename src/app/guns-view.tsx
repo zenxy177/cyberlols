@@ -201,6 +201,13 @@ export function GunsView({
                   fallbackAvatarUrl={profile.discord_avatar_url}
                   customBadges={profile.discord_badges}
                   badgeMode={profile.discord_badges_mode}
+                  appearance={{
+                    width: profile.discord_presence_width,
+                    padding: profile.discord_presence_padding,
+                    avatarSize: profile.discord_presence_avatar_size,
+                    artSize: profile.discord_presence_art_size,
+                    textScale: profile.discord_presence_text_scale,
+                  }}
                 />
               </div>
             ) : null}

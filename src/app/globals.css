@@ -8052,6 +8052,203 @@ textarea:focus-visible {
   color: #c3c6a9;
 }
 
+.guns-discord-wrapper {
+  width: var(--discord-presence-width, 100%);
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.guns-discord-badge {
+  gap: var(--discord-presence-gap, 14px);
+  padding: var(--discord-presence-padding, 12px 14px);
+}
+
+.guns-discord-avatar-container {
+  width: var(--discord-presence-avatar-size, 72px);
+  height: var(--discord-presence-avatar-size, 72px);
+}
+
+.guns-discord-avatar-placeholder {
+  font-size: var(--discord-presence-avatar-initial-size, 20px);
+}
+
+.guns-discord-status-dot {
+  width: var(--discord-presence-status-dot-size, 22px);
+  height: var(--discord-presence-status-dot-size, 22px);
+}
+
+.guns-discord-display-name {
+  font-size: var(--discord-presence-name-size, 18px);
+}
+
+.guns-discord-username {
+  font-size: var(--discord-presence-username-size, 13px);
+}
+
+.guns-discord-activity {
+  font-size: var(--discord-presence-activity-size, 14px);
+}
+
+.guns-discord-activity-text,
+.guns-discord-activity-listen,
+.guns-discord-activity-by {
+  font-size: var(--discord-presence-activity-size, 14px);
+}
+
+.guns-discord-activity-time {
+  font-size: var(--discord-presence-time-size, 10px);
+}
+
+.guns-discord-status-text {
+  font-size: var(--discord-presence-status-size, 9px);
+}
+
+.guns-discord-activity.has-art .guns-discord-game-pill-icon,
+.guns-discord-activity.has-art .guns-discord-game-pill-vector,
+.guns-discord-activity.has-art .guns-discord-game-pill-monogram,
+.guns-discord-spotify-art {
+  width: var(--discord-presence-art-size, 68px);
+  height: var(--discord-presence-art-size, 68px);
+}
+
+.guns-discord-activity.has-art .guns-discord-game-pill-monogram {
+  min-width: var(--discord-presence-art-size, 68px);
+  font-size: var(--discord-presence-art-monogram-size, 14px);
+}
+
+.presence-layout-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid rgba(193, 172, 125, 0.19);
+  border-bottom: 1px solid rgba(193, 172, 125, 0.19);
+}
+
+.presence-layout-heading,
+.presence-layout-title {
+  display: flex;
+  align-items: center;
+}
+
+.presence-layout-heading {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.presence-layout-title {
+  gap: 10px;
+  color: #d7ad6d;
+}
+
+.presence-layout-title h4 {
+  margin: 0;
+  color: #f1e7d0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.presence-layout-title p,
+.presence-layout-note {
+  margin: 3px 0 0;
+  color: #c2bea9;
+  font-size: 11px;
+}
+
+.presence-layout-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 22px;
+  row-gap: 14px;
+}
+
+.presence-layout-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  color: #e4dcc9;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.presence-layout-control output {
+  color: #d7ad6d;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.presence-layout-control input {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+  accent-color: #d7ad6d;
+  cursor: pointer;
+}
+
+.presence-layout-control input:focus-visible,
+.presence-layout-reset:focus-visible,
+.simulator-footer-hint button:focus-visible {
+  outline: 2px solid #d7ad6d;
+  outline-offset: 3px;
+}
+
+.presence-layout-reset,
+.simulator-footer-hint button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(193, 172, 125, 0.28);
+  border-radius: 6px;
+  padding: 7px 9px;
+  background: rgba(215, 173, 109, 0.07);
+  color: #e7d7b6;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.presence-layout-reset:hover:not(:disabled),
+.simulator-footer-hint button:hover {
+  border-color: rgba(215, 173, 109, 0.55);
+  background: rgba(215, 173, 109, 0.14);
+}
+
+.presence-layout-reset:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.presence-layout-note {
+  margin: -4px 0 0;
+}
+
+.simulator-footer-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.simulator-footer-hint button {
+  padding: 5px 8px;
+}
+
+@media (max-width: 520px) {
+  .presence-layout-heading {
+    align-items: flex-start;
+  }
+
+  .presence-layout-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
 .guns-discord-clan-tag {
   display: inline-flex;
   align-items: center;
