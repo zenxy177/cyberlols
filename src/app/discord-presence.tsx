@@ -1625,14 +1625,24 @@ export function DiscordPresence({
           </div>
 
           {gameActivity ? (
-            <div className="guns-discord-activity is-game">
+            <div
+              className={`guns-discord-activity is-game ${
+                gameActivity.name.length > 18 ? "is-long" : ""
+              }`}
+            >
               <span className="guns-discord-activity-text" title={gameActivity.name}>
                 Oynuyor <b>{gameActivity.name}</b>
               </span>
               <MiniGamePlaytime start={gameActivity.timestamps?.start} />
             </div>
           ) : spotify ? (
-            <div className="guns-discord-activity is-spotify">
+            <div
+              className={`guns-discord-activity is-spotify ${
+                spotify.song.length > 18 || cleanArtist.length > 22
+                  ? "is-long"
+                  : ""
+              }`}
+            >
               <span className="guns-discord-activity-lines">
                 <span className="guns-discord-activity-listen">
                   Dinliyor <b title={`${spotify.song} - ${spotify.artist}`}>{spotify.song}</b>
@@ -1650,12 +1660,16 @@ export function DiscordPresence({
         </div>
 
         {gameActivity ? (
-          <MiniGameThumbnail
-            key={`${gameActivity.id || gameActivity.name}`}
-            activity={gameActivity}
-          />
+          <div className="guns-discord-art-column">
+            <MiniGameThumbnail
+              key={`${gameActivity.id || gameActivity.name}`}
+              activity={gameActivity}
+            />
+          </div>
         ) : spotify ? (
-          <SpotifyMiniArt spotify={spotify} />
+          <div className="guns-discord-art-column">
+            <SpotifyMiniArt spotify={spotify} />
+          </div>
         ) : null}
 
         <ArrowUpRight size={16} className="guns-discord-arrow" aria-hidden="true" />

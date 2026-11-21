@@ -3555,6 +3555,15 @@ textarea:focus-visible {
   color: #91adff;
 }
 
+.guns-discord-art-column {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  margin-left: calc(var(--discord-presence-gap, 14px) * -0.4);
+}
+
 .guns-discord-game-pill-icon {
   width: 14px;
   height: 14px;
@@ -3598,7 +3607,6 @@ textarea:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
 }
 
 .guns-discord-activity-text b {
@@ -7920,6 +7928,10 @@ textarea:focus-visible {
     inset 0 1px 0 rgba(255, 242, 211, 0.11);
 }
 
+.guns-main-card:has(.guns-discord-activity.is-long) {
+  width: min(100%, 620px);
+}
+
 .guns-main-card::before {
   content: "";
   position: absolute;
@@ -8042,8 +8054,7 @@ textarea:focus-visible {
 
 .guns-discord-wrapper {
   width: max-content;
-  min-width: var(--discord-presence-width, 100%);
-  max-width: 100%;
+  max-width: min(var(--discord-presence-width, 100%), 100%);
   margin-inline: auto;
 }
 
@@ -8106,7 +8117,6 @@ textarea:focus-visible {
 .guns-discord-game-pill-vector,
 .guns-discord-game-pill-monogram,
 .guns-discord-spotify-art {
-  margin-left: -6px;
   width: var(--discord-presence-art-size, 68px);
   height: var(--discord-presence-art-size, 68px);
 }
