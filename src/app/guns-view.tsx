@@ -207,6 +207,7 @@ export function GunsView({
                     avatarSize: profile.discord_presence_avatar_size,
                     artSize: profile.discord_presence_art_size,
                     textScale: profile.discord_presence_text_scale,
+                    textGap: profile.discord_presence_text_gap,
                   }}
                 />
               </div>

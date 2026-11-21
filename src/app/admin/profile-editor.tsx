@@ -290,7 +290,8 @@ const DISCORD_PRESENCE_CONTROLS: Array<{
     | "discord_presence_padding"
     | "discord_presence_avatar_size"
     | "discord_presence_art_size"
-    | "discord_presence_text_scale";
+    | "discord_presence_text_scale"
+    | "discord_presence_text_gap";
   label: string;
   min: number;
   max: number;
@@ -301,6 +302,7 @@ const DISCORD_PRESENCE_CONTROLS: Array<{
   { key: "discord_presence_avatar_size", label: "Discord avatarı", min: 36, max: 80, unit: " px" },
   { key: "discord_presence_art_size", label: "Etkinlik görseli", min: 36, max: 80, unit: " px" },
   { key: "discord_presence_text_scale", label: "Yazı boyutu", min: 80, max: 120, unit: "%" },
+  { key: "discord_presence_text_gap", label: "Metinler arası boşluk", min: 0, max: 16, unit: " px" },
 ];
 
 type StudioTab = "identity" | "design" | "audio" | "effects" | "discord" | "socials" | "analytics";
@@ -568,6 +570,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       discord_presence_avatar_size: EMPTY_PROFILE.discord_presence_avatar_size,
       discord_presence_art_size: EMPTY_PROFILE.discord_presence_art_size,
       discord_presence_text_scale: EMPTY_PROFILE.discord_presence_text_scale,
+      discord_presence_text_gap: EMPTY_PROFILE.discord_presence_text_gap,
     }));
     setEditorState({ kind: "idle", message: "" });
   }
@@ -841,6 +844,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       );
       const safePresenceArtSize = clampNumber(form.discord_presence_art_size, 68, 36, 80);
       const safePresenceTextScale = clampNumber(form.discord_presence_text_scale, 100, 80, 120);
+      const safePresenceTextGap = clampNumber(form.discord_presence_text_gap, 6, 0, 16);
 
       // Omit views_count to avoid resetting counter
       const formWithoutViews: Record<string, unknown> = { ...form };
@@ -857,6 +861,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         discord_presence_avatar_size: safePresenceAvatarSize,
         discord_presence_art_size: safePresenceArtSize,
         discord_presence_text_scale: safePresenceTextScale,
+        discord_presence_text_gap: safePresenceTextGap,
         entrance_effect_preset: form.entrance_effect_preset || "signal_sweep",
         display_name: form.display_name.trim(),
         headline: form.headline.trim(),
@@ -959,6 +964,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         discord_presence_avatar_size: safePresenceAvatarSize,
         discord_presence_art_size: safePresenceArtSize,
         discord_presence_text_scale: safePresenceTextScale,
+        discord_presence_text_gap: safePresenceTextGap,
         entrance_effect_preset: form.entrance_effect_preset || "signal_sweep",
         typewriter_lines:
           cleanTypewriterLines.length > 0
@@ -1035,6 +1041,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
   add column if not exists discord_presence_avatar_size integer not null default 72 check (discord_presence_avatar_size between 36 and 80),
   add column if not exists discord_presence_art_size integer not null default 68 check (discord_presence_art_size between 36 and 80),
   add column if not exists discord_presence_text_scale integer not null default 100 check (discord_presence_text_scale between 80 and 120),
+  add column if not exists discord_presence_text_gap integer not null default 6 check (discord_presence_text_gap between 0 and 16),
   add column if not exists discord_badges text[] not null default '{}',
   add column if not exists discord_badges_mode text not null default 'auto',
   add column if not exists links_layout text not null default 'dock';
@@ -3197,6 +3204,7 @@ notify pgrst, 'reload schema';`;
                           avatarSize: form.discord_presence_avatar_size,
                           artSize: form.discord_presence_art_size,
                           textScale: form.discord_presence_text_scale,
+                          textGap: form.discord_presence_text_gap,
                         }}
                       />
                     </div>

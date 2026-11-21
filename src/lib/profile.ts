@@ -58,6 +58,7 @@ export type Profile = {
   discord_presence_avatar_size: number;
   discord_presence_art_size: number;
   discord_presence_text_scale: number;
+  discord_presence_text_gap: number;
   discord_badges: string[];
   discord_badges_mode: DiscordBadgeMode;
   accent_color: string;
@@ -123,6 +124,7 @@ export const EMPTY_PROFILE: Profile = {
   discord_presence_avatar_size: 72,
   discord_presence_art_size: 68,
   discord_presence_text_scale: 100,
+  discord_presence_text_gap: 6,
   discord_badges: [],
   discord_badges_mode: "auto",
   accent_color: "#78a7ff",
@@ -321,6 +323,12 @@ export function normalizeProfile(value: unknown): Profile {
       EMPTY_PROFILE.discord_presence_text_scale,
       80,
       120,
+    ),
+    discord_presence_text_gap: clampNumber(
+      row.discord_presence_text_gap,
+      EMPTY_PROFILE.discord_presence_text_gap,
+      0,
+      16,
     ),
     discord_badges: Array.isArray(row.discord_badges)
       ? row.discord_badges

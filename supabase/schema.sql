@@ -53,6 +53,7 @@ create table if not exists public.profiles (
   discord_presence_avatar_size integer not null default 72 check (discord_presence_avatar_size between 36 and 80),
   discord_presence_art_size integer not null default 68 check (discord_presence_art_size between 36 and 80),
   discord_presence_text_scale integer not null default 100 check (discord_presence_text_scale between 80 and 120),
+  discord_presence_text_gap integer not null default 6 check (discord_presence_text_gap between 0 and 16),
   discord_badges text[] not null default '{}',
   discord_badges_mode text not null default 'auto',
   accent_color text not null default '#78a7ff'
@@ -102,6 +103,7 @@ alter table public.profiles
   add column if not exists discord_presence_avatar_size integer not null default 72 check (discord_presence_avatar_size between 36 and 80),
   add column if not exists discord_presence_art_size integer not null default 68 check (discord_presence_art_size between 36 and 80),
   add column if not exists discord_presence_text_scale integer not null default 100 check (discord_presence_text_scale between 80 and 120),
+  add column if not exists discord_presence_text_gap integer not null default 6 check (discord_presence_text_gap between 0 and 16),
   add column if not exists discord_badges text[] not null default '{}',
   add column if not exists discord_badges_mode text not null default 'auto',
   add column if not exists links_layout text not null default 'dock';

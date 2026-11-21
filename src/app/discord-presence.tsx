@@ -14,6 +14,7 @@ export type DiscordPresenceAppearance = {
   avatarSize: number;
   artSize: number;
   textScale: number;
+  textGap: number;
 };
 
 type DiscordPresenceProps = {
@@ -1516,6 +1517,7 @@ export function DiscordPresence({
       : null;
   const avatarSize = appearance?.avatarSize ?? 72;
   const textScale = appearance?.textScale ?? 100;
+  const textGap = appearance?.textGap ?? 6;
 
   return (
     <div
@@ -1548,6 +1550,8 @@ export function DiscordPresence({
           14,
           Math.min(24, avatarSize * 0.3),
         )}px`,
+        ["--discord-presence-text-gap" as string]: `${textGap}px`,
+        ["--discord-presence-subtext-gap" as string]: `${Math.round(textGap / 3)}px`,
       }}
     >
       {/* Discord Profile Pill */}

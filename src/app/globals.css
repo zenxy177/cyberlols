@@ -8103,6 +8103,14 @@ textarea:focus-visible {
   font-size: var(--discord-presence-status-size, 9px);
 }
 
+.guns-discord-details {
+  gap: var(--discord-presence-text-gap, 6px);
+}
+
+.guns-discord-activity-lines {
+  gap: var(--discord-presence-subtext-gap, 2px);
+}
+
 .guns-discord-activity.has-art .guns-discord-game-pill-icon,
 .guns-discord-activity.has-art .guns-discord-game-pill-vector,
 .guns-discord-activity.has-art .guns-discord-game-pill-monogram,

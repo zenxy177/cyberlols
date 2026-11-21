@@ -626,6 +626,7 @@ assert.strictEqual(EMPTY_PROFILE.discord_presence_padding, 12);
 assert.strictEqual(EMPTY_PROFILE.discord_presence_avatar_size, 72);
 assert.strictEqual(EMPTY_PROFILE.discord_presence_art_size, 68);
 assert.strictEqual(EMPTY_PROFILE.discord_presence_text_scale, 100);
+assert.strictEqual(EMPTY_PROFILE.discord_presence_text_gap, 6);
 assert.strictEqual(normalizeProfile({}).discord_presence_width, 100);
 const normalizedPresenceLayout = normalizeProfile({
   discord_presence_width: 120,
@@ -633,12 +634,14 @@ const normalizedPresenceLayout = normalizeProfile({
   discord_presence_avatar_size: 24,
   discord_presence_art_size: 100,
   discord_presence_text_scale: 130,
+  discord_presence_text_gap: 30,
 });
 assert.strictEqual(normalizedPresenceLayout.discord_presence_width, 100);
 assert.strictEqual(normalizedPresenceLayout.discord_presence_padding, 4);
 assert.strictEqual(normalizedPresenceLayout.discord_presence_avatar_size, 36);
 assert.strictEqual(normalizedPresenceLayout.discord_presence_art_size, 80);
 assert.strictEqual(normalizedPresenceLayout.discord_presence_text_scale, 120);
+assert.strictEqual(normalizedPresenceLayout.discord_presence_text_gap, 16);
 assert.strictEqual(EMPTY_PROFILE.links_layout, "dock");
 assert.strictEqual(normalizeProfile(null).links_layout, "dock");
 assert.strictEqual(normalizeProfile({}).links_layout, "dock");
