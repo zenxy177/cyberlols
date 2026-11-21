@@ -124,7 +124,7 @@ export const EMPTY_PROFILE: Profile = {
   discord_presence_avatar_size: 72,
   discord_presence_art_size: 68,
   discord_presence_text_scale: 100,
-  discord_presence_text_gap: 6,
+  discord_presence_text_gap: 3,
   discord_badges: [],
   discord_badges_mode: "auto",
   accent_color: "#78a7ff",

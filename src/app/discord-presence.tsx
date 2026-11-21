@@ -1554,7 +1554,6 @@ export function DiscordPresence({
         ["--discord-presence-subtext-gap" as string]: `${Math.round(textGap / 3)}px`,
       }}
     >
-      {/* Discord Profile Pill */}
       <a
         href={`https://discord.com/users/${encodeURIComponent(discordUserId)}`}
         target="_blank"
@@ -1626,19 +1625,14 @@ export function DiscordPresence({
           </div>
 
           {gameActivity ? (
-            <div className="guns-discord-activity is-game has-art">
+            <div className="guns-discord-activity is-game">
               <span className="guns-discord-activity-text" title={gameActivity.name}>
                 Oynuyor <b>{gameActivity.name}</b>
               </span>
               <MiniGamePlaytime start={gameActivity.timestamps?.start} />
-              <span className="guns-discord-activity-gap" aria-hidden="true" />
-              <MiniGameThumbnail
-                key={`${gameActivity.id || gameActivity.name}`}
-                activity={gameActivity}
-              />
             </div>
           ) : spotify ? (
-            <div className="guns-discord-activity is-spotify has-art">
+            <div className="guns-discord-activity is-spotify">
               <span className="guns-discord-activity-lines">
                 <span className="guns-discord-activity-listen">
                   Dinliyor <b title={`${spotify.song} - ${spotify.artist}`}>{spotify.song}</b>
@@ -1647,8 +1641,6 @@ export function DiscordPresence({
                   {cleanArtist ? `Sanatçı: ${cleanArtist}` : ""}
                 </span>
               </span>
-              <span className="guns-discord-activity-gap" aria-hidden="true" />
-              <SpotifyMiniArt spotify={spotify} />
             </div>
           ) : (
             <div className="guns-discord-status-text">
@@ -1656,6 +1648,15 @@ export function DiscordPresence({
             </div>
           )}
         </div>
+
+        {gameActivity ? (
+          <MiniGameThumbnail
+            key={`${gameActivity.id || gameActivity.name}`}
+            activity={gameActivity}
+          />
+        ) : spotify ? (
+          <SpotifyMiniArt spotify={spotify} />
+        ) : null}
 
         <ArrowUpRight size={16} className="guns-discord-arrow" aria-hidden="true" />
       </a>

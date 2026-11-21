@@ -844,7 +844,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       );
       const safePresenceArtSize = clampNumber(form.discord_presence_art_size, 68, 36, 80);
       const safePresenceTextScale = clampNumber(form.discord_presence_text_scale, 100, 80, 120);
-      const safePresenceTextGap = clampNumber(form.discord_presence_text_gap, 6, 0, 16);
+      const safePresenceTextGap = clampNumber(form.discord_presence_text_gap, 3, 0, 16);
 
       // Omit views_count to avoid resetting counter
       const formWithoutViews: Record<string, unknown> = { ...form };
@@ -1041,7 +1041,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
   add column if not exists discord_presence_avatar_size integer not null default 72 check (discord_presence_avatar_size between 36 and 80),
   add column if not exists discord_presence_art_size integer not null default 68 check (discord_presence_art_size between 36 and 80),
   add column if not exists discord_presence_text_scale integer not null default 100 check (discord_presence_text_scale between 80 and 120),
-  add column if not exists discord_presence_text_gap integer not null default 6 check (discord_presence_text_gap between 0 and 16),
+  add column if not exists discord_presence_text_gap integer not null default 3 check (discord_presence_text_gap between 0 and 16),
   add column if not exists discord_badges text[] not null default '{}',
   add column if not exists discord_badges_mode text not null default 'auto',
   add column if not exists links_layout text not null default 'dock';
