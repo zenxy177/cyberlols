@@ -141,11 +141,6 @@ export function GunsView({
               ["--card-scrim-alpha" as string]: cardScrim.toFixed(3),
             }}
           >
-            <div className="receiver-readout" aria-hidden="true">
-              <span className="receiver-live-indicator">CANLI SİNYAL</span>
-              <span className="receiver-frequency">88.4 <small>FM</small></span>
-            </div>
-
             {/* Views counter: bottom-left inside card */}
             <div className="guns-card-corner-views">
               <ViewsCounter initialCount={profile.views_count} />
@@ -191,6 +186,13 @@ export function GunsView({
               ) : null}
             </div>
 
+            <div className="guns-card-bio-section">
+              <TypewriterBio
+                lines={profile.typewriter_lines}
+                fallbackBio={profile.bio}
+              />
+            </div>
+
             {/* Discord Presence Section */}
             {profile.discord_user_id ? (
               <div className="guns-card-discord-section">
@@ -219,13 +221,6 @@ export function GunsView({
             </div>
 
             <div className="guns-card-extra">
-              <div className="guns-card-bio-section">
-                <TypewriterBio
-                  lines={profile.typewriter_lines}
-                  fallbackBio={profile.bio}
-                />
-              </div>
-
               {profile.location.trim() ? (
                 <div className="guns-card-location">
                   <MapPin size={13} className="guns-location-icon" aria-hidden="true" />

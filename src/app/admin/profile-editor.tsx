@@ -2999,10 +2999,6 @@ notify pgrst, 'reload schema';`;
                     };
                   })()}
                 >
-                  <div className="receiver-readout" aria-hidden="true">
-                    <span className="receiver-live-indicator">CANLI SİNYAL</span>
-                    <span className="receiver-frequency">88.4 <small>FM</small></span>
-                  </div>
                   {/* Avatar */}
                   <div className="guns-card-avatar-wrap">
                     <div className="guns-card-avatar-glow" aria-hidden="true" />

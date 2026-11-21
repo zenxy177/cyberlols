@@ -12,6 +12,8 @@ export interface DiscordBadge {
   category: "staff" | "hypesquad" | "developer" | "community" | "subscriber";
 }
 
+type DiscordBadgePayload = string | { id?: string | null; badge_id?: string | null };
+
 export const DISCORD_FLAGS = {
   STAFF: 1 << 0, // 1
   PARTNER: 1 << 1, // 2
@@ -183,7 +185,7 @@ export function resolveDiscordBadges({
   avatar?: string | null;
   premiumType?: number | null;
   boosting?: boolean | null;
-  badgeIds?: string[] | null;
+  badgeIds?: DiscordBadgePayload[] | null;
   customBadges?: string[] | null;
   badgeMode?: DiscordBadgeMode;
 }): DiscordBadge[] {
@@ -218,8 +220,10 @@ export function resolveDiscordBadges({
   }
 
   if (Array.isArray(badgeIds)) {
-    for (const id of badgeIds) {
-      const detected = BADGE_MAP.get(id);
+    for (const entry of badgeIds) {
+      const id =
+        typeof entry === "string" ? entry : entry?.id ?? entry?.badge_id;
+      const detected = typeof id === "string" ? BADGE_MAP.get(id) : null;
       if (detected && !autoBadges.some((b) => b.id === detected.id)) {
         autoBadges.push(detected);
       }

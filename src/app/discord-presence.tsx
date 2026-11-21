@@ -77,8 +77,8 @@ export type PresenceData = {
     premium_type?: number;
     boosting?: boolean;
     is_booster?: boolean;
-    badge_ids?: string[];
-    badges?: string[];
+    badge_ids?: Array<string | { id?: string | null; badge_id?: string | null }>;
+    badges?: Array<string | { id?: string | null; badge_id?: string | null }>;
   };
   discord_status: "online" | "idle" | "dnd" | "offline";
   activities: PresenceActivity[];

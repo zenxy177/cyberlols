@@ -3416,6 +3416,7 @@ textarea:focus-visible {
 
 .guns-discord-badge {
   display: flex;
+  position: relative;
   align-items: center;
   gap: 8px;
   width: 100%;
@@ -3431,7 +3432,7 @@ textarea:focus-visible {
   text-align: left;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .guns-discord-badge:hover {
@@ -3634,6 +3635,7 @@ textarea:focus-visible {
   color: #e0e0e0;
   display: flex;
   align-items: center;
+  gap: 5px;
   min-width: 0;
   white-space: nowrap;
 }
@@ -3642,7 +3644,6 @@ textarea:focus-visible {
   display: inline-block;
   min-width: 0;
   max-width: 220px;
-  margin-left: 5px;
   overflow: hidden;
   mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 8px), transparent 100%);
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 8px), transparent 100%);
@@ -3891,6 +3892,13 @@ textarea:focus-visible {
   left: auto;
   right: 10px;
   transform: none;
+}
+
+.guns-main-card:has(.guns-discord-badge-item:hover),
+.guns-main-card:has(.guns-discord-badge-item:focus-visible),
+.guns-main-card:has(.guns-discord-badge-item.is-active) {
+  z-index: 20;
+  overflow: visible;
 }
 
 .guns-discord-badge-tooltip-header {
@@ -8006,55 +8014,8 @@ textarea:focus-visible {
 }
 
 .guns-card-inner {
-  padding: 58px clamp(18px, 3.5vw, 32px) 28px;
+  padding: 28px clamp(18px, 3.5vw, 32px);
   gap: clamp(10px, 1.5vh, 16px);
-}
-
-.receiver-readout {
-  position: absolute;
-  z-index: 5;
-  top: 21px;
-  left: 24px;
-  right: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #d7cca7;
-  font-family: var(--mono);
-  pointer-events: none;
-}
-
-.receiver-live-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #bcc7a0;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-}
-
-.receiver-live-indicator::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #b6c886;
-  box-shadow: 0 0 7px rgba(182, 200, 134, 0.55);
-}
-
-.receiver-frequency {
-  color: #f0c47e;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.receiver-frequency small {
-  margin-left: 3px;
-  color: #c9c4a4;
-  font-size: 9px;
-  letter-spacing: 0.13em;
 }
 
 .guns-card-avatar-frame {
@@ -8090,10 +8051,8 @@ textarea:focus-visible {
 }
 
 .guns-discord-badge {
-  border: 0;
-  border-top: 1px solid rgba(215, 173, 109, 0.24);
-  border-bottom: 1px solid rgba(215, 173, 109, 0.24);
-  border-radius: 0;
+  border: 1px solid rgba(215, 173, 109, 0.24);
+  border-radius: 18px;
   background: transparent;
   box-shadow: none;
 }

@@ -598,6 +598,12 @@ assert.strictEqual(resolveDiscordBadges({ premiumType: 0 }).some((b) => b.id ===
 assert.strictEqual(resolveDiscordBadges({ premiumType: -1 }).some((b) => b.id === "nitro"), false);
 assert.strictEqual(resolveDiscordBadges({ boosting: true }).some((b) => b.id === "booster"), true);
 assert.strictEqual(resolveDiscordBadges({ badgeIds: ["nitro", "quest", "nitro"] }).length, 2);
+assert.deepStrictEqual(
+  resolveDiscordBadges({
+    badgeIds: [{ id: "early_supporter" }, { badge_id: "active_developer" }, { id: "unknown" }],
+  }).map((badge) => badge.id),
+  ["active_developer", "early_supporter"],
+);
 assert.strictEqual(resolveDiscordBadges({ customBadges: ["nitro"], badgeMode: "auto" }).length, 0);
 
 // Test customBadges sanitization with non-string, whitespace, and duplicate items
