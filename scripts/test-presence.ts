@@ -569,15 +569,14 @@ assert.strictEqual(bothIds.includes("booster"), true);
 // Verify no duplicate active_developer
 assert.strictEqual(bothIds.filter((id) => id === "active_developer").length, 1);
 
-// Mode: auto with fallback to customBadges when flags are 0
+// Mode: auto ignores custom selections and uses live Discord data only
 const fallbackResult = resolveDiscordBadges({
   publicFlags: 0,
   avatar: null,
   customBadges: ["active_developer", "booster"],
   badgeMode: "auto",
 });
-assert.strictEqual(fallbackResult.length, 2);
-assert.deepStrictEqual(fallbackResult.map((b) => b.id), ["active_developer", "booster"]);
+assert.strictEqual(fallbackResult.length, 0);
 
 // Edge cases: null/undefined/empty
 assert.deepStrictEqual(resolveDiscordBadges({}), []);
@@ -597,6 +596,9 @@ assert.strictEqual(resolveDiscordBadges({ premiumType: 2 }).some((b) => b.id ===
 assert.strictEqual(resolveDiscordBadges({ premiumType: 3 }).some((b) => b.id === "nitro"), true);
 assert.strictEqual(resolveDiscordBadges({ premiumType: 0 }).some((b) => b.id === "nitro"), false);
 assert.strictEqual(resolveDiscordBadges({ premiumType: -1 }).some((b) => b.id === "nitro"), false);
+assert.strictEqual(resolveDiscordBadges({ boosting: true }).some((b) => b.id === "booster"), true);
+assert.strictEqual(resolveDiscordBadges({ badgeIds: ["nitro", "quest", "nitro"] }).length, 2);
+assert.strictEqual(resolveDiscordBadges({ customBadges: ["nitro"], badgeMode: "auto" }).length, 0);
 
 // Test customBadges sanitization with non-string, whitespace, and duplicate items
 const dirtyCustom = ["active_developer", "", "   ", "nitro", "active_developer", "invalid_badge_xyz"];

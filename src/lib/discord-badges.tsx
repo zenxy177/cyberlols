@@ -174,12 +174,16 @@ export function resolveDiscordBadges({
   publicFlags,
   avatar,
   premiumType,
+  boosting,
+  badgeIds,
   customBadges,
   badgeMode = "auto",
 }: {
   publicFlags?: number | null;
   avatar?: string | null;
   premiumType?: number | null;
+  boosting?: boolean | null;
+  badgeIds?: string[] | null;
   customBadges?: string[] | null;
   badgeMode?: DiscordBadgeMode;
 }): DiscordBadge[] {
@@ -203,6 +207,22 @@ export function resolveDiscordBadges({
     const nitroBadge = BADGE_MAP.get("nitro");
     if (nitroBadge && !autoBadges.some((b) => b.id === "nitro")) {
       autoBadges.push(nitroBadge);
+    }
+  }
+
+  if (boosting) {
+    const boosterBadge = BADGE_MAP.get("booster");
+    if (boosterBadge && !autoBadges.some((b) => b.id === "booster")) {
+      autoBadges.push(boosterBadge);
+    }
+  }
+
+  if (Array.isArray(badgeIds)) {
+    for (const id of badgeIds) {
+      const detected = BADGE_MAP.get(id);
+      if (detected && !autoBadges.some((b) => b.id === detected.id)) {
+        autoBadges.push(detected);
+      }
     }
   }
 
@@ -233,15 +253,9 @@ export function resolveDiscordBadges({
     return sortBadges(combined);
   }
 
-  // Default "auto": if auto badges found, return them.
-  // If no auto badges are detected (e.g. bot offline or public_flags is 0)
-  // but user provided customBadges, fallback to customBadges so profile isn't blank.
+  // Default "auto": use only live Discord data. Custom admin selections are ignored.
   if (autoBadges.length > 0) {
     return sortBadges(autoBadges);
-  }
-
-  if (cleanCustom.length > 0) {
-    return cleanCustom;
   }
 
   return [];
@@ -324,22 +338,18 @@ export function DiscordBadgeIcon({
           aria-hidden="true"
         >
           <defs>
-            <linearGradient
-              id={`nitro-grad-${badgeId}${gradSuffix}`}
-              x1="2"
-              y1="2"
-              x2="22"
-              y2="22"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stopColor="#f47b67" />
-              <stop offset="0.5" stopColor="#ff73fa" />
-              <stop offset="1" stopColor="#9c84ef" />
+            <linearGradient id={`nitro-grad-${badgeId}${gradSuffix}`} x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#b6b3ff" />
+              <stop offset="0.45" stopColor="#ff79d7" />
+              <stop offset="1" stopColor="#8e6cff" />
             </linearGradient>
           </defs>
-          <circle cx="12" cy="12" r="10.5" fill={`url(#nitro-grad-${badgeId}${gradSuffix})`} />
           <path
-            d="M7 13.2l3.8-7h3l-2.1 4.2h3.9l-5.8 7.8 1.4-5H7z"
+            d="M12 1.8l8.7 5v10.4l-8.7 5-8.7-5V6.8l8.7-5z"
+            fill={`url(#nitro-grad-${badgeId}${gradSuffix})`}
+          />
+          <path
+            d="M7.1 15.9l3.2-7.8h2.8l-1.8 4.2h3.1l-1.7 3.6H7.1zm7.1-1.8l2.7-6.3h-2.8l-1.2 2.8h-2.2l1.2-2.8h-2.8l-2.7 6.3h2.8l1.2-2.8h2.2l-1.2 2.8h2.8z"
             fill="#ffffff"
           />
         </svg>

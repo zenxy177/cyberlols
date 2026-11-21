@@ -75,6 +75,10 @@ export type PresenceData = {
     public_flags?: number;
     flags?: number;
     premium_type?: number;
+    boosting?: boolean;
+    is_booster?: boolean;
+    badge_ids?: string[];
+    badges?: string[];
   };
   discord_status: "online" | "idle" | "dnd" | "offline";
   activities: PresenceActivity[];
@@ -1500,6 +1504,12 @@ export function DiscordPresence({
     publicFlags: data?.discord_user?.public_flags ?? data?.discord_user?.flags,
     avatar: data?.discord_user?.avatar,
     premiumType: data?.discord_user?.premium_type,
+    boosting:
+      data?.discord_user?.boosting === true ||
+      data?.discord_user?.is_booster === true,
+    badgeIds:
+      data?.discord_user?.badge_ids ??
+      data?.discord_user?.badges,
     customBadges,
     badgeMode,
   });
@@ -1645,7 +1655,20 @@ export function DiscordPresence({
             >
               <span className="guns-discord-activity-lines">
                 <span className="guns-discord-activity-listen">
-                  Dinliyor <b title={`${spotify.song} - ${spotify.artist}`}>{spotify.song}</b>
+                  <span>Dinliyor </span>
+                  {spotify.song.length > 18 ? (
+                    <span
+                      className="guns-discord-marquee"
+                      title={`${spotify.song} - ${spotify.artist}`}
+                    >
+                      <span className="guns-discord-marquee-track">
+                        <b>{spotify.song}</b>
+                        <b aria-hidden="true">{spotify.song}</b>
+                      </span>
+                    </span>
+                  ) : (
+                    <b title={`${spotify.song} - ${spotify.artist}`}>{spotify.song}</b>
+                  )}
                 </span>
                 <span className="guns-discord-activity-by" title={cleanArtist}>
                   {cleanArtist ? `Sanatçı: ${cleanArtist}` : ""}

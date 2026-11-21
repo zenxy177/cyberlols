@@ -55,7 +55,6 @@ import {
   type ProfileLink,
 } from "@/lib/profile";
 import {
-  ALL_DISCORD_BADGES,
   DiscordBadgeIcon,
   resolveDiscordBadges,
   type DiscordBadge,
@@ -885,6 +884,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         cursor_style: form.cursor_style || "neon_dot",
         cursor_trail: form.cursor_trail || "stardust",
         enable_click_ripple: Boolean(form.enable_click_ripple),
+        discord_badges_mode: "auto",
         links,
         links_layout: form.links_layout === "buttons" ? "buttons" : "dock",
         updated_at: new Date().toISOString(),
@@ -929,6 +929,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
           discord_username: form.discord_username,
           discord_global_name: form.discord_global_name,
           discord_avatar_url: form.discord_avatar_url,
+          discord_badges_mode: "auto",
           accent_color: form.accent_color,
           surface_color: form.surface_color,
           links,
@@ -954,6 +955,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         ...form,
         links,
         links_layout: form.links_layout === "buttons" ? "buttons" : "dock",
+        discord_badges_mode: "auto",
         default_volume: safeVolume,
         background_video_opacity: safeBgVideoOpacity,
         background_video_audio_fallback:
@@ -2488,67 +2490,14 @@ notify pgrst, 'reload schema';`;
                       <h4>Discord Profil Rozetleri (Badges)</h4>
                     </div>
                     <p>
-                      guns.lol estetiğinde resmi Discord rozetleri vitrini (Active Dev, Nitro, Booster, HypeSquad vb.).
+                      Hesabında görünen resmi Discord rozetleri bot verisine göre otomatik alınır.
                     </p>
-                  </div>
-
-                  {/* Rozet Gösterim Modu */}
-                  <div className="cyber-field full-width mt-4">
-                    <label className="cyber-label">
-                      <span>Rozet Gösterim Modu</span>
-                      <span className="field-hint">
-                        Rozetlerin otomatik mi yoksa özel olarak mı gösterileceğini belirleyin.
-                      </span>
-                    </label>
-                    <div className="discord-mode-grid">
-                      <button
-                        type="button"
-                        className={`discord-mode-card ${form.discord_badges_mode === "auto" ? "is-active" : ""}`}
-                        onClick={() => update("discord_badges_mode", "auto")}
-                      >
-                        <div className="discord-mode-radio">
-                          <span className="discord-mode-dot" />
-                        </div>
-                        <div className="discord-mode-info">
-                          <strong>⚡ Otomatik Algılama (Bot)</strong>
-                          <span>Discord profilinizdeki resmi rozetleri ve Nitro durumunu canlı okur.</span>
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        className={`discord-mode-card ${form.discord_badges_mode === "custom" ? "is-active" : ""}`}
-                        onClick={() => update("discord_badges_mode", "custom")}
-                      >
-                        <div className="discord-mode-radio">
-                          <span className="discord-mode-dot" />
-                        </div>
-                        <div className="discord-mode-info">
-                          <strong>🎨 Özel Rozetler</strong>
-                          <span>Yalnızca aşağıda seçtiğiniz rozetleri profilinizde gösterir.</span>
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        className={`discord-mode-card ${form.discord_badges_mode === "both" ? "is-active" : ""}`}
-                        onClick={() => update("discord_badges_mode", "both")}
-                      >
-                        <div className="discord-mode-radio">
-                          <span className="discord-mode-dot" />
-                        </div>
-                        <div className="discord-mode-info">
-                          <strong>🔗 Birleşik (Otomatik + Özel)</strong>
-                          <span>Hem bot ile algılanan rozetleri hem de seçtiklerinizi birleştirir.</span>
-                        </div>
-                      </button>
-                    </div>
                   </div>
 
                   {/* Bot Detected Box */}
                   {presenceData.status === "monitored" ? (
                     <div className="lanyard-detected-box mt-4">
-                      <span className="lanyard-detected-label">Canlı Bot Tespiti:</span>
+                      <span className="lanyard-detected-label">Canlı Rozetler:</span>
                       {presenceData.detectedBadges && presenceData.detectedBadges.length > 0 ? (
                         <div className="lanyard-detected-chips">
                           {presenceData.detectedBadges.map((b) => (
@@ -2560,97 +2509,11 @@ notify pgrst, 'reload schema';`;
                         </div>
                       ) : (
                         <span className="lanyard-detected-empty">
-                          Genel rozet bayrağı tespit edilemedi (Özel rozetler seçebilirsiniz).
+                          Discord hesabında genel rozet bayrağı bulunamadı veya bot henüz veriyi alamadı.
                         </span>
                       )}
                     </div>
                   ) : null}
-
-                  {/* Preset Shortcuts */}
-                  <div className="quick-presets-section mt-4">
-                    <span className="quick-presets-title">Hızlı Rozet Setleri:</span>
-                    <div className="quick-presets-chips">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const preset = ["active_developer", "nitro", "booster", "bravery"];
-                          update("discord_badges", preset);
-                        }}
-                        className="preset-chip-btn"
-                      >
-                        <Sparkles size={12} />
-                        <span>Popüler (Dev + Nitro + Booster + Bravery)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const preset = ["early_supporter", "early_bot_developer", "nitro"];
-                          update("discord_badges", preset);
-                        }}
-                        className="preset-chip-btn"
-                      >
-                        <span>Nadir (Early Supporter + Bot Dev + Nitro)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          update("discord_badges", []);
-                        }}
-                        className="preset-chip-btn"
-                        style={{ color: "#f87171" }}
-                      >
-                        <Trash2 size={12} />
-                        <span>Tümünü Kaldır</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Badges Picker Grid */}
-                  <div className="flex items-center justify-between mt-5 mb-2">
-                    <span className="text-xs font-semibold text-slate-300">
-                      Rozet Listesi (Seçilen: {form.discord_badges.length})
-                    </span>
-                    {form.discord_badges.length > 0 ? (
-                      <span className="text-[11px] text-blue-400 font-mono">
-                        {form.discord_badges.length} rozet aktif
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="discord-badges-picker-grid">
-                    {ALL_DISCORD_BADGES.map((badge) => {
-                      const isSelected = form.discord_badges.includes(badge.id);
-                      return (
-                        <button
-                          key={badge.id}
-                          type="button"
-                          aria-pressed={isSelected}
-                          onClick={() => {
-                            const current = form.discord_badges;
-                            const next = isSelected
-                              ? current.filter((id) => id !== badge.id)
-                              : [...current, badge.id];
-                            update("discord_badges", next);
-                          }}
-                          className={`discord-badge-picker-item ${isSelected ? "is-selected" : ""}`}
-                          style={{
-                            ["--badge-color" as string]: badge.brandColor,
-                            ["--badge-glow" as string]: badge.glowColor,
-                          }}
-                        >
-                          <div className="discord-badge-picker-icon">
-                            <DiscordBadgeIcon badgeId={badge.id} size={22} />
-                          </div>
-                          <div className="discord-badge-picker-details">
-                            <span className="discord-badge-picker-name">{badge.name}</span>
-                            <span className="discord-badge-picker-desc">{badge.description}</span>
-                          </div>
-                          <div className="discord-badge-picker-check">
-                            {isSelected ? <Check size={14} /> : null}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
               </div>
             ) : null}
@@ -3197,7 +3060,7 @@ notify pgrst, 'reload schema';`;
                         fallbackGlobalName={form.discord_global_name}
                         fallbackAvatarUrl={form.discord_avatar_url}
                         customBadges={form.discord_badges}
-                        badgeMode={form.discord_badges_mode}
+                        badgeMode="auto"
                         appearance={{
                           width: form.discord_presence_width,
                           padding: form.discord_presence_padding,

@@ -200,7 +200,7 @@ export function GunsView({
                   fallbackGlobalName={profile.discord_global_name}
                   fallbackAvatarUrl={profile.discord_avatar_url}
                   customBadges={profile.discord_badges}
-                  badgeMode={profile.discord_badges_mode}
+                  badgeMode="auto"
                   appearance={{
                     width: profile.discord_presence_width,
                     padding: profile.discord_presence_padding,

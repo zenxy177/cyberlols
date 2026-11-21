@@ -3632,9 +3632,72 @@ textarea:focus-visible {
   font-size: 14px;
   font-weight: 600;
   color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  min-width: 0;
   white-space: nowrap;
+}
+
+.guns-discord-marquee {
+  display: inline-block;
+  min-width: 0;
+  max-width: 220px;
+  margin-left: 5px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 8px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 8px), transparent 100%);
+  vertical-align: bottom;
+}
+
+.guns-discord-marquee-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  gap: 32px;
+  animation: gunsDiscordMarqueeLeftRight 8s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.guns-discord-marquee-track b {
+  display: inline-block;
+  white-space: nowrap;
+  color: #f1f4fb;
+  font-weight: 700;
+}
+
+.guns-discord-marquee-track b + b {
+  display: inline-block;
+}
+
+@keyframes gunsDiscordMarqueeLeftRight {
+  0%,
+  12% {
+    transform: translateX(0);
+  }
+  88%,
+  100% {
+    transform: translateX(calc(-100% + 220px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guns-discord-marquee-track {
+    animation: none;
+  }
+
+  .guns-discord-marquee-track b + b {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guns-discord-marquee-track {
+    animation: none;
+  }
+
+  .guns-discord-marquee-track b + b {
+    display: none;
+  }
 }
 
 .guns-discord-activity-listen b {

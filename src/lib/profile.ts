@@ -338,12 +338,7 @@ export function normalizeProfile(value: unknown): Profile {
           )
           .slice(0, 20)
       : [],
-    discord_badges_mode:
-      row.discord_badges_mode === "custom" ||
-      row.discord_badges_mode === "both" ||
-      row.discord_badges_mode === "auto"
-        ? (row.discord_badges_mode as DiscordBadgeMode)
-        : "auto",
+    discord_badges_mode: "auto",
     accent_color: isHexColor(row.accent_color)
       ? row.accent_color
       : EMPTY_PROFILE.accent_color,
