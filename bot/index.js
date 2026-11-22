@@ -4,11 +4,22 @@ require("dotenv").config();
 
 const crypto = require("node:crypto");
 const http = require("node:http");
+const https = require("node:https");
+const fs = require("node:fs");
 const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const { WebSocketServer, WebSocket } = require("ws");
 
+const sslCertPath = (process.env.SSL_CERT_PATH || "").trim();
+const sslKeyPath = (process.env.SSL_KEY_PATH || "").trim();
+const isHttps = Boolean(
+  sslCertPath &&
+  sslKeyPath &&
+  fs.existsSync(sslCertPath) &&
+  fs.existsSync(sslKeyPath)
+);
+
 const PORT = Number(process.env.PORT || process.env.SERVER_PORT || 3001);
-const HOST = process.env.HOST || "0.0.0.0";
+const HOST = process.env.HOST || (isHttps ? "0.0.0.0" : "127.0.0.1");
 const API_KEY = (process.env.PRESENCE_API_KEY || "").trim();
 const TARGET_USER_ID = (process.env.TARGET_USER_ID || "").trim();
 const GUILD_ID_RAW = (process.env.GUILD_ID || "").trim();
@@ -302,8 +313,9 @@ async function collectDiagnostics() {
   };
 }
 
-const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+const requestHandler = async (req, res) => {
+  const protocol = isHttps ? "https" : "http";
+  const url = new URL(req.url || "/", `${protocol}://${req.headers.host || "localhost"}`);
 
   if (url.pathname === "/health" && req.method === "GET") {
     sendJson(res, 200, {
@@ -348,7 +360,17 @@ const server = http.createServer(async (req, res) => {
   }
 
   sendJson(res, 404, { success: false, error: "not_found" });
-});
+};
+
+const server = isHttps
+  ? https.createServer(
+      {
+        cert: fs.readFileSync(sslCertPath),
+        key: fs.readFileSync(sslKeyPath),
+      },
+      requestHandler,
+    )
+  : http.createServer(requestHandler);
 
 const wss = new WebSocketServer({ noServer: true });
 

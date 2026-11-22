@@ -83,7 +83,8 @@ export function ViewsCounter({ initialCount }: ViewsCounterProps) {
           localStorage.setItem(STORAGE_KEY, String(now));
         } catch {}
         try {
-          document.cookie = `${COOKIE_NAME}=${now}; max-age=${24 * 60 * 60}; path=/; SameSite=Lax`;
+          const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
+          document.cookie = `${COOKIE_NAME}=${now}; max-age=${24 * 60 * 60}; path=/; SameSite=Lax${isSecure ? "; Secure" : ""}`;
         } catch {}
       })
       .catch(() => {

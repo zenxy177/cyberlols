@@ -2,8 +2,28 @@ import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/profile";
 import { describeVisit } from "@/lib/analytics-storage";
+import {
+  checkRateLimit,
+  getClientIp,
+  logThrottledWarn,
+  logThrottledError,
+} from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+  const clientIp = getClientIp(req);
+  const rateLimit = checkRateLimit(`views:post:${clientIp}`, 10, 60_000);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds),
+        },
+      },
+    );
+  }
+
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ ok: false, error: "Not configured" }, { status: 400 });
   }
@@ -61,14 +81,14 @@ export async function POST(req: Request) {
         });
       }
     } else if (visitRpc.error) {
-      console.warn("RPC record_profile_view error:", visitRpc.error.message);
+      logThrottledWarn("rpc_record_view", "RPC record_profile_view error:", visitRpc.error.message);
     }
 
     // Eski şema yedeği: RPC yoksa log yaz ve sayacı artır.
     try {
       await supabase.from("profile_views_log").insert(visit.payload);
     } catch (logErr) {
-      console.warn("Analytics visit log insert error:", logErr);
+      logThrottledWarn("visit_log_insert", "Analytics visit log insert error:", logErr);
     }
 
     // Call atomic stored procedure (schema uses profile_slug; default arg also works)
@@ -81,7 +101,11 @@ export async function POST(req: Request) {
       if (!rpc2.error && typeof rpc2.data === "number") {
         count = rpc2.data;
       } else {
-        console.warn("RPC increment_profile_views error:", rpc1.error?.message || rpc2.error?.message);
+        logThrottledWarn(
+          "rpc_increment",
+          "RPC increment_profile_views error:",
+          rpc1.error?.message || rpc2.error?.message,
+        );
       }
     }
 
@@ -100,12 +124,26 @@ export async function POST(req: Request) {
       views_count: count,
     });
   } catch (err) {
-    console.error("View increment failed:", err);
+    logThrottledError("view_increment_failed", "View increment failed:", err);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const clientIp = getClientIp(req);
+  const rateLimit = checkRateLimit(`views:get:${clientIp}`, 30, 60_000);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds),
+        },
+      },
+    );
+  }
+
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ ok: false, views_count: 0 });
   }
@@ -128,6 +166,20 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
+  const clientIp = getClientIp(req);
+  const rateLimit = checkRateLimit(`views:patch:${clientIp}`, 10, 60_000);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds),
+        },
+      },
+    );
+  }
+
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ ok: false, error: "Not configured" }, { status: 400 });
   }
@@ -140,18 +192,27 @@ export async function PATCH(req: Request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ ok: false, error: "Yetkisiz erişim. Yeniden giriş yapın." }, { status: 401 });
+      return NextResponse.json(
+        { ok: false, error: "Yetkisiz erişim. Yeniden giriş yapın." },
+        { status: 401 },
+      );
     }
 
     const { data: isOwner } = await supabase.rpc("is_site_admin");
     if (!isOwner) {
-      return NextResponse.json({ ok: false, error: "Bu işlem için sahip yetkisi gerekiyor." }, { status: 403 });
+      return NextResponse.json(
+        { ok: false, error: "Bu işlem için sahip yetkisi gerekiyor." },
+        { status: 403 },
+      );
     }
 
     const body = await req.json();
     const newCountRaw = Number(body.views_count);
     if (!Number.isFinite(newCountRaw) || newCountRaw < 0) {
-      return NextResponse.json({ ok: false, error: "Geçersiz görüntülenme sayısı." }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "Geçersiz görüntülenme sayısı." },
+        { status: 400 },
+      );
     }
 
     const newCount = Math.round(newCountRaw);
@@ -183,8 +244,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ ok: true, views_count: newCount });
   } catch (err) {
-    console.error("View update failed:", err);
+    logThrottledError("view_update_failed", "View update failed:", err);
     return NextResponse.json({ ok: false, error: "Sunucu hatası" }, { status: 500 });
   }
 }
-

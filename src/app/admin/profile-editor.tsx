@@ -45,6 +45,7 @@ import {
   clampNumber,
   hexToRgba,
   normalizeProfile,
+  safeCssUrl,
   safeLinkUrl,
   type CardBorderEffect,
   type CursorStyle,
@@ -148,161 +149,161 @@ const BORDER_EFFECT_PRESETS: Array<{
   title: string;
   desc: string;
 }> = [
-  {
-    id: "lunar_aurora",
-    title: "🌙 Lunar Aurora",
-    desc: "Ay Işığı & Gümüş Parıltı - Nefes alan hilal aurası (Moon Knight Uyumlu)",
-  },
-  {
-    id: "rgb_flow",
-    title: "🌈 RGB Flow",
-    desc: "Kromatik Lazer - 360° dönen pürüzsüz gökkuşağı lazer akışı",
-  },
-  {
-    id: "neon_pulse",
-    title: "⚡ Neon Pulse",
-    desc: "Dinamik Vurgu - Seçtiğin renk paletine göre nabız atan neon",
-  },
-  {
-    id: "cyber_glow",
-    title: "🔮 Cyber Glow",
-    desc: "Siber Arka Işık - Derin karanlıkta arka plana vuran neon ışığı",
-  },
-  {
-    id: "none",
-    title: "🔲 Klasik Cam",
-    desc: "Sade Cam - Efektsiz, şeffaf koyu cam kenarlık",
-  },
-];
+    {
+      id: "lunar_aurora",
+      title: "🌙 Lunar Aurora",
+      desc: "Ay Işığı & Gümüş Parıltı - Nefes alan hilal aurası (Moon Knight Uyumlu)",
+    },
+    {
+      id: "rgb_flow",
+      title: "🌈 RGB Flow",
+      desc: "Kromatik Lazer - 360° dönen pürüzsüz gökkuşağı lazer akışı",
+    },
+    {
+      id: "neon_pulse",
+      title: "⚡ Neon Pulse",
+      desc: "Dinamik Vurgu - Seçtiğin renk paletine göre nabız atan neon",
+    },
+    {
+      id: "cyber_glow",
+      title: "🔮 Cyber Glow",
+      desc: "Siber Arka Işık - Derin karanlıkta arka plana vuran neon ışığı",
+    },
+    {
+      id: "none",
+      title: "🔲 Klasik Cam",
+      desc: "Sade Cam - Efektsiz, şeffaf koyu cam kenarlık",
+    },
+  ];
 
 const NAME_EFFECT_PRESETS: Array<{
   id: NameEffect;
   title: string;
   desc: string;
 }> = [
-  {
-    id: "lunar_shimmer",
-    title: "🌙 Ay Işığı Dalgası",
-    desc: "Moon Knight'a özel gümüş-mavi sıvı ışık akışı",
-  },
-  {
-    id: "rgb_wave",
-    title: "🌈 RGB Gökkuşağı",
-    desc: "360° kesintisiz kromatik spektrum lazer akışı",
-  },
-  {
-    id: "neon_pulse",
-    title: "⚡ Neon Nabız",
-    desc: "Vurgulu renkte nabız gibi derin parlayan neon aura",
-  },
-  {
-    id: "cyber_glitch",
-    title: "👾 Siber Glitch",
-    desc: "Siberpunk RGB kanal ayrışması ve anlık titreme",
-  },
-  {
-    id: "sparkle",
-    title: "✨ Yıldız Işıltısı",
-    desc: "Elmas gibi parıldayan yıldız süpürmesi ve pırıltı",
-  },
-  {
-    id: "none",
-    title: "🔲 Sade Beyaz",
-    desc: "Efektsiz, temiz ve minimalist beyaz tipografi",
-  },
-];
+    {
+      id: "lunar_shimmer",
+      title: "🌙 Ay Işığı Dalgası",
+      desc: "Moon Knight'a özel gümüş-mavi sıvı ışık akışı",
+    },
+    {
+      id: "rgb_wave",
+      title: "🌈 RGB Gökkuşağı",
+      desc: "360° kesintisiz kromatik spektrum lazer akışı",
+    },
+    {
+      id: "neon_pulse",
+      title: "⚡ Neon Nabız",
+      desc: "Vurgulu renkte nabız gibi derin parlayan neon aura",
+    },
+    {
+      id: "cyber_glitch",
+      title: "👾 Siber Glitch",
+      desc: "Siberpunk RGB kanal ayrışması ve anlık titreme",
+    },
+    {
+      id: "sparkle",
+      title: "✨ Yıldız Işıltısı",
+      desc: "Elmas gibi parıldayan yıldız süpürmesi ve pırıltı",
+    },
+    {
+      id: "none",
+      title: "🔲 Sade Beyaz",
+      desc: "Efektsiz, temiz ve minimalist beyaz tipografi",
+    },
+  ];
 
 const CURSOR_STYLE_PRESETS: Array<{
   id: CursorStyle;
   title: string;
   desc: string;
 }> = [
-  {
-    id: "neon_dot",
-    title: "🔴 Siber Neon Nokta",
-    desc: "Beyaz neon merkez nokta ve yumuşak yaylı takip halkası",
-  },
-  {
-    id: "crosshair",
-    title: "🎯 Taktiksel Nişangah (Crosshair)",
-    desc: "Taktiksel sniper nişangahı; linklerin üzerinde 45° döner ve genişler",
-  },
-  {
-    id: "lunar_crescent",
-    title: "🌙 Hilal Ay İmleci",
-    desc: "Moon Knight parıldayan hilal ay imleci ve etrafında dönen hale",
-  },
-  {
-    id: "default",
-    title: "🖱️ Varsayılan Tarayıcı",
-    desc: "Özel imleç kapalı; standart Windows / macOS oku",
-  },
-];
+    {
+      id: "neon_dot",
+      title: "🔴 Siber Neon Nokta",
+      desc: "Beyaz neon merkez nokta ve yumuşak yaylı takip halkası",
+    },
+    {
+      id: "crosshair",
+      title: "🎯 Taktiksel Nişangah (Crosshair)",
+      desc: "Taktiksel sniper nişangahı; linklerin üzerinde 45° döner ve genişler",
+    },
+    {
+      id: "lunar_crescent",
+      title: "🌙 Hilal Ay İmleci",
+      desc: "Moon Knight parıldayan hilal ay imleci ve etrafında dönen hale",
+    },
+    {
+      id: "default",
+      title: "🖱️ Varsayılan Tarayıcı",
+      desc: "Özel imleç kapalı; standart Windows / macOS oku",
+    },
+  ];
 
 const CURSOR_TRAIL_PRESETS: Array<{
   id: CursorTrail;
   title: string;
   desc: string;
 }> = [
-  {
-    id: "stardust",
-    title: "✨ Dökülen Yıldız Tozu",
-    desc: "Mouse hareket ettikçe arkasından süzülen ışıltılı ay tozu parçacıkları",
-  },
-  {
-    id: "ghost",
-    title: "👻 Hayalet Işık İzi",
-    desc: "İmlecin arkasından yumuşak gecikmeyle gelen buğulu ışık halkası",
-  },
-  {
-    id: "none",
-    title: "🚫 İz Yok",
-    desc: "Yalnızca imleç görünür, arkasında iz bırakmaz",
-  },
-];
+    {
+      id: "stardust",
+      title: "✨ Dökülen Yıldız Tozu",
+      desc: "Mouse hareket ettikçe arkasından süzülen ışıltılı ay tozu parçacıkları",
+    },
+    {
+      id: "ghost",
+      title: "👻 Hayalet Işık İzi",
+      desc: "İmlecin arkasından yumuşak gecikmeyle gelen buğulu ışık halkası",
+    },
+    {
+      id: "none",
+      title: "🚫 İz Yok",
+      desc: "Yalnızca imleç görünür, arkasında iz bırakmaz",
+    },
+  ];
 
 const ENTRANCE_EFFECT_PRESETS: Array<{
   id: EntranceEffectPreset;
   title: string;
   description: string;
 }> = [
-  {
-    id: "signal_sweep",
-    title: "Sinyal Taraması",
-    description: "Video ışığı ve profil yüzeyi aynı anda açılır.",
-  },
-  {
-    id: "dial_lock",
-    title: "Frekans Kilidi",
-    description: "İnce bir tarama çizgisi profili netleştirir.",
-  },
-  {
-    id: "wave_pulse",
-    title: "Dalga Darbesi",
-    description: "Sinyal halkası genişlerken profil görünür olur.",
-  },
-];
+    {
+      id: "signal_sweep",
+      title: "Sinyal Taraması",
+      description: "Video ışığı ve profil yüzeyi aynı anda açılır.",
+    },
+    {
+      id: "dial_lock",
+      title: "Frekans Kilidi",
+      description: "İnce bir tarama çizgisi profili netleştirir.",
+    },
+    {
+      id: "wave_pulse",
+      title: "Dalga Darbesi",
+      description: "Sinyal halkası genişlerken profil görünür olur.",
+    },
+  ];
 
 const DISCORD_PRESENCE_CONTROLS: Array<{
   key:
-    | "discord_presence_width"
-    | "discord_presence_padding"
-    | "discord_presence_avatar_size"
-    | "discord_presence_art_size"
-    | "discord_presence_text_scale"
-    | "discord_presence_text_gap";
+  | "discord_presence_width"
+  | "discord_presence_padding"
+  | "discord_presence_avatar_size"
+  | "discord_presence_art_size"
+  | "discord_presence_text_scale"
+  | "discord_presence_text_gap";
   label: string;
   min: number;
   max: number;
   unit: string;
 }> = [
-  { key: "discord_presence_width", label: "Bölüm genişliği", min: 70, max: 100, unit: "%" },
-  { key: "discord_presence_padding", label: "İç boşluk", min: 4, max: 24, unit: " px" },
-  { key: "discord_presence_avatar_size", label: "Discord avatarı", min: 36, max: 80, unit: " px" },
-  { key: "discord_presence_art_size", label: "Etkinlik görseli", min: 36, max: 80, unit: " px" },
-  { key: "discord_presence_text_scale", label: "Yazı boyutu", min: 80, max: 120, unit: "%" },
-  { key: "discord_presence_text_gap", label: "Metinler arası boşluk", min: 0, max: 16, unit: " px" },
-];
+    { key: "discord_presence_width", label: "Bölüm genişliği", min: 70, max: 100, unit: "%" },
+    { key: "discord_presence_padding", label: "İç boşluk", min: 4, max: 24, unit: " px" },
+    { key: "discord_presence_avatar_size", label: "Discord avatarı", min: 36, max: 80, unit: " px" },
+    { key: "discord_presence_art_size", label: "Etkinlik görseli", min: 36, max: 80, unit: " px" },
+    { key: "discord_presence_text_scale", label: "Yazı boyutu", min: 80, max: 120, unit: "%" },
+    { key: "discord_presence_text_gap", label: "Metinler arası boşluk", min: 0, max: 16, unit: " px" },
+  ];
 
 type StudioTab = "identity" | "design" | "audio" | "effects" | "discord" | "socials" | "analytics";
 
@@ -321,6 +322,27 @@ type EditorState = {
   kind: "idle" | "saving" | "success" | "error";
   message: string;
 };
+
+function safeMediaSrc(raw: string | null | undefined): string {
+  if (typeof raw !== "string" || raw.trim().length === 0) return "";
+  try {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("blob:") || trimmed.startsWith("data:image/")) {
+      return trimmed;
+    }
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+      return encodeURI(parsed.href);
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+function sanitizeImageSrc(raw: string | null | undefined): string {
+  return safeMediaSrc(raw);
+}
 
 export function ProfileEditor({ profile }: { profile: Profile }) {
   const router = useRouter();
@@ -551,7 +573,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             setAnalyticsData(data);
           }
         })
-        .catch(() => {})
+        .catch(() => { })
         .finally(() => setLoadingAnalytics(false));
     }
   }, [activeTab, analyticsData]);
@@ -947,7 +969,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
       if (upsertError) {
         throw new Error(
           upsertError.message ||
-            (typeof upsertError === "object" ? JSON.stringify(upsertError) : String(upsertError)),
+          (typeof upsertError === "object" ? JSON.stringify(upsertError) : String(upsertError)),
         );
       }
 
@@ -1322,13 +1344,12 @@ notify pgrst, 'reload schema';`;
           <div className="stat-card-header">
             <span className="stat-card-title">Discord & Spotify</span>
             <div
-              className={`stat-status-dot ${
-                presenceData.status === "monitored"
+              className={`stat-status-dot ${presenceData.status === "monitored"
                   ? "is-online"
                   : presenceData.status === "loading"
                     ? "is-loading"
                     : "is-idle"
-              }`}
+                }`}
             />
           </div>
           <div className="stat-card-body">
@@ -1594,10 +1615,10 @@ notify pgrst, 'reload schema';`;
                   {/* Avatar Upload */}
                   <div className="studio-asset-card">
                     <div className="asset-media-preview avatar-preview">
-                      {form.avatar_url ? (
-                        <img src={form.avatar_url} alt="Avatar" />
-                      ) : form.discord_avatar_url ? (
-                        <img src={form.discord_avatar_url} alt="Discord Avatar" />
+                      {sanitizeImageSrc(form.avatar_url) ? (
+                        <img src={sanitizeImageSrc(form.avatar_url)} alt="Avatar" />
+                      ) : sanitizeImageSrc(form.discord_avatar_url) ? (
+                        <img src={sanitizeImageSrc(form.discord_avatar_url)} alt="Discord Avatar" />
                       ) : (
                         <div className="asset-fallback-letter">
                           {(form.display_name[0] || "E").toUpperCase()}
@@ -1640,9 +1661,9 @@ notify pgrst, 'reload schema';`;
                   {/* Background Video Upload */}
                   <div className="studio-asset-card">
                     <div className="asset-media-preview video-preview">
-                      {form.background_video_url ? (
+                      {safeMediaSrc(form.background_video_url) ? (
                         <video
-                          src={form.background_video_url}
+                          src={safeMediaSrc(form.background_video_url)}
                           muted
                           playsInline
                           preload="metadata"
@@ -1692,8 +1713,8 @@ notify pgrst, 'reload schema';`;
                   {/* Background Static Image */}
                   <div className="studio-asset-card">
                     <div className="asset-media-preview image-preview">
-                      {form.background_url ? (
-                        <img src={form.background_url} alt="Arka Plan" />
+                      {safeMediaSrc(form.background_url) ? (
+                        <img src={safeMediaSrc(form.background_url)} alt="Arka Plan" />
                       ) : (
                         <Palette size={20} className="empty-icon" />
                       )}
@@ -1956,7 +1977,7 @@ notify pgrst, 'reload schema';`;
 
                 {/* Dedicated MP3 Asset Field */}
                 <div className="studio-asset-card audio-source-card">
-                  <audio ref={testAudioRef} src={form.audio_url || undefined} preload="metadata" />
+                  <audio ref={testAudioRef} src={safeMediaSrc(form.audio_url) || undefined} preload="metadata" />
                   <div className="asset-media-preview audio-preview">
                     {form.audio_url ? (
                       <button
@@ -2410,17 +2431,16 @@ notify pgrst, 'reload schema';`;
 
                 {/* Presence Bot Status Banner */}
                 <div
-                  className={`studio-lanyard-banner ${
-                    presenceData.status === "monitored"
+                  className={`studio-lanyard-banner ${presenceData.status === "monitored"
                       ? "is-active"
                       : presenceData.status === "loading"
                         ? "is-loading"
                         : "is-warning"
-                  }`}
+                    }`}
                 >
                   <div className="lanyard-banner-avatar">
-                    {form.discord_avatar_url ? (
-                      <img src={form.discord_avatar_url} alt="Discord Avatar" />
+                    {sanitizeImageSrc(form.discord_avatar_url) ? (
+                      <img src={sanitizeImageSrc(form.discord_avatar_url)} alt="Discord Avatar" />
                     ) : (
                       <Headphones size={20} />
                     )}
@@ -2956,9 +2976,9 @@ notify pgrst, 'reload schema';`;
                 ["--surface" as string]: form.surface_color,
               }}
             >
-              {form.background_video_url ? (
+              {safeMediaSrc(form.background_video_url) ? (
                 <video
-                  src={form.background_video_url}
+                  src={safeMediaSrc(form.background_video_url)}
                   autoPlay
                   loop
                   muted
@@ -2968,11 +2988,11 @@ notify pgrst, 'reload schema';`;
                     opacity: (form.background_video_opacity ?? 70) / 100,
                   }}
                 />
-              ) : form.background_url ? (
+              ) : safeCssUrl(form.background_url) ? (
                 <div
                   className="simulator-backdrop-image"
                   style={{
-                    backgroundImage: `url("${form.background_url}")`,
+                    backgroundImage: `url("${safeCssUrl(form.background_url)}")`,
                     opacity: (form.background_video_opacity ?? 70) / 100,
                   }}
                 />
@@ -2981,9 +3001,8 @@ notify pgrst, 'reload schema';`;
               {/* Simulated Card */}
               <div className="simulator-card-wrapper">
                 <div
-                  className={`guns-main-card simulator-main-card ${
-                    form.enable_lunar_effects ? "has-lunar-aura" : ""
-                  } border-fx-${form.card_border_effect || "lunar_aurora"}`}
+                  className={`guns-main-card simulator-main-card ${form.enable_lunar_effects ? "has-lunar-aura" : ""
+                    } border-fx-${form.card_border_effect || "lunar_aurora"}`}
                   data-entrance-effect={form.entrance_effect_preset}
                   style={(() => {
                     const cardBg = hexToRgba(
@@ -3006,9 +3025,9 @@ notify pgrst, 'reload schema';`;
                       <div className="guns-avatar-lunar-ring" aria-hidden="true" />
                     ) : null}
                     <div className="guns-card-avatar-frame">
-                      {form.avatar_url || form.discord_avatar_url ? (
+                      {sanitizeImageSrc(form.avatar_url || form.discord_avatar_url) ? (
                         <img
-                          src={form.avatar_url || form.discord_avatar_url || ""}
+                          src={sanitizeImageSrc(form.avatar_url || form.discord_avatar_url)}
                           alt="Avatar"
                           className="guns-card-avatar-img"
                         />

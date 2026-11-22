@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { hexToRgba, cardScrimAlpha, type Profile } from "@/lib/profile";
+import { hexToRgba, cardScrimAlpha, safeCssUrl, type Profile } from "@/lib/profile";
 import { ClickToEnter } from "@/app/click-to-enter";
 import { AudioPlayer } from "@/app/audio-player";
 import { ProfileCard } from "@/app/profile-card";
@@ -88,11 +88,11 @@ export function GunsView({
             src={backgroundVideoUrl}
             poster={backgroundUrl || undefined}
           />
-        ) : backgroundUrl ? (
+        ) : safeCssUrl(backgroundUrl) ? (
           <div
             className="guns-backdrop-image"
             style={{
-              backgroundImage: `url("${backgroundUrl}")`,
+              backgroundImage: `url("${safeCssUrl(backgroundUrl)}")`,
               opacity: (profile.background_video_opacity ?? 70) / 100,
             }}
           />

@@ -394,6 +394,31 @@ export function safeExternalUrl(value: string): string | null {
 
 export const safeLinkUrl = safeExternalUrl;
 
+/**
+ * Sanitizes a URL for safe usage in CSS `url(...)` declarations to prevent CSS injection.
+ * Rejects CSS breakout characters (quotes, parens, escapes, semicolons, braces, newlines,
+ * control chars, whitespace), restricts protocol strictly to https: or http:, and validates URL.
+ */
+export function safeCssUrl(value: unknown): string | null {
+  if (typeof value !== "string" || !value) return null;
+
+  // Reject CSS breakout characters, delimiters, escapes, newlines, control chars, or whitespace
+  if (/[\s"'();\\{}]|[\x00-\x1f\x7f]/.test(value)) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+      return parsed.href;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export function isSupabaseConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
