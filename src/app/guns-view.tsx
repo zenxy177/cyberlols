@@ -13,6 +13,7 @@ import { ViewsCounter } from "@/app/views-counter";
 import { ShareButton } from "@/app/share-button";
 import { MoonBadge } from "@/app/moon-badge";
 import { LunarEffects } from "@/app/lunar-effects";
+import { DiscordBadges } from "@/app/discord-badges";
 import { MapPin } from "lucide-react";
 
 type GunsViewProps = {
@@ -176,6 +177,10 @@ export function GunsView({
                 >
                   {displayName}
                 </h1>
+                <DiscordBadges
+                  discordUserId={profile.discord_user_id}
+                  disabledBadges={profile.disabled_discord_badges}
+                />
                 {profile.enable_moon_badge ? (
                   <MoonBadge title={profile.moon_badge_title} />
                 ) : null}

@@ -2,6 +2,7 @@
 
 import {
   ArrowUpRight,
+  Award,
   BarChart3,
   Check,
   ChevronDown,
@@ -56,10 +57,15 @@ import {
   type ProfileLink,
 } from "@/lib/profile";
 import {
-  DiscordBadgeIcon,
   resolveDiscordBadges,
+  ALL_DISCORD_BADGES,
   type DiscordBadge,
+  type ManualBadge,
+  sanitizeBadgeKey,
+  isValidBadgeIconUrl,
 } from "@/lib/discord-badges";
+import { DiscordBadgeIcon } from "@/lib/discord-badges-icons";
+import { DiscordBadges } from "@/app/discord-badges";
 import { createBrowserSupabase } from "@/lib/supabase/browser";
 import { MoonBadge } from "@/app/moon-badge";
 import { SocialBadges } from "@/app/social-badges";
@@ -305,7 +311,7 @@ const DISCORD_PRESENCE_CONTROLS: Array<{
     { key: "discord_presence_text_gap", label: "Metinler arası boşluk", min: 0, max: 16, unit: " px" },
   ];
 
-type StudioTab = "identity" | "design" | "audio" | "effects" | "discord" | "socials" | "analytics";
+type StudioTab = "identity" | "design" | "audio" | "effects" | "discord" | "badges" | "socials" | "analytics";
 
 type AnalyticsData = {
   hasRealData?: boolean;
@@ -384,6 +390,30 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
   const [editingViews, setEditingViews] = useState(false);
   const [viewsInputVal, setViewsInputVal] = useState<string>(String(initial.views_count));
   const [savingViews, setSavingViews] = useState(false);
+
+  // Rozet Yönetimi (Manual Badges) State
+  const [manualBadges, setManualBadges] = useState<ManualBadge[]>([]);
+  const [isLoadingManualBadges, setIsLoadingManualBadges] = useState(false);
+  const [editingBadgeId, setEditingBadgeId] = useState<string | null>(null);
+  const [isCreatingBadge, setIsCreatingBadge] = useState(false);
+  const [badgeForm, setBadgeForm] = useState<{
+    key: string;
+    label: string;
+    description: string;
+    icon_url: string;
+    sort: number;
+    enabled: boolean;
+  }>({
+    key: "",
+    label: "",
+    description: "",
+    icon_url: "",
+    sort: 0,
+    enabled: true,
+  });
+  const [isUploadingBadgeIcon, setIsUploadingBadgeIcon] = useState(false);
+  const [badgeActionError, setBadgeActionError] = useState<string | null>(null);
+  const badgeIconInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!editingViews) {
@@ -678,6 +708,260 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
     update("typewriter_lines", updated.length > 0 ? updated : [""]);
   }
 
+  const loadManualBadges = async () => {
+    setIsLoadingManualBadges(true);
+    try {
+      const supabase = createBrowserSupabase();
+      const { data, error } = await supabase
+        .from("manual_badges")
+        .select("*")
+        .order("sort", { ascending: true })
+        .order("created_at", { ascending: true });
+      if (!error && Array.isArray(data)) {
+        setManualBadges(data as ManualBadge[]);
+      }
+    } catch (err) {
+      console.error("Manual badges load error:", err);
+    } finally {
+      setIsLoadingManualBadges(false);
+    }
+  };
+
+  useEffect(() => {
+    loadManualBadges();
+  }, []);
+
+  function toggleDiscordBadgeVisibility(badgeKey: string) {
+    const key = badgeKey.toLowerCase().trim();
+    const current = form.disabled_discord_badges || [];
+    const updated = current.includes(key)
+      ? current.filter((k) => k !== key)
+      : [...current, key];
+    update("disabled_discord_badges", updated);
+  }
+
+  function startCreateBadge() {
+    setEditingBadgeId(null);
+    setIsCreatingBadge(true);
+    setBadgeActionError(null);
+    const nextSort =
+      manualBadges.length > 0
+        ? Math.max(...manualBadges.map((b) => b.sort)) + 10
+        : 10;
+    setBadgeForm({
+      key: "",
+      label: "",
+      description: "",
+      icon_url: "",
+      sort: nextSort,
+      enabled: true,
+    });
+  }
+
+  function startEditBadge(badge: ManualBadge) {
+    setIsCreatingBadge(false);
+    setEditingBadgeId(badge.id);
+    setBadgeActionError(null);
+    setBadgeForm({
+      key: badge.key,
+      label: badge.label,
+      description: badge.description || "",
+      icon_url: badge.icon_url || "",
+      sort: badge.sort,
+      enabled: badge.enabled,
+    });
+  }
+
+  function cancelBadgeEdit() {
+    setIsCreatingBadge(false);
+    setEditingBadgeId(null);
+    setBadgeActionError(null);
+  }
+
+  async function handleSaveManualBadge() {
+    const rawKey = badgeForm.key.trim();
+    const cleanKey = sanitizeBadgeKey(rawKey);
+    if (!cleanKey) {
+      setBadgeActionError("Rozet anahtarı (key) 2-50 karakter ve alfanümerik olmalıdır.");
+      return;
+    }
+    if (!badgeForm.label.trim()) {
+      setBadgeActionError("Rozet başlığı boş bırakılamaz.");
+      return;
+    }
+    if (badgeForm.icon_url && !isValidBadgeIconUrl(badgeForm.icon_url)) {
+      setBadgeActionError("Geçersiz ikon URL adresi (yalnızca https:// veya / ile başlayan yollar).");
+      return;
+    }
+
+    setBadgeActionError(null);
+    try {
+      const supabase = createBrowserSupabase();
+      if (isCreatingBadge) {
+        const { data, error } = await supabase
+          .from("manual_badges")
+          .insert({
+            key: cleanKey,
+            label: badgeForm.label.trim(),
+            description: badgeForm.description.trim(),
+            icon_url: badgeForm.icon_url.trim(),
+            sort: Number(badgeForm.sort) || 0,
+            enabled: Boolean(badgeForm.enabled),
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        if (data) {
+          setManualBadges((prev) => [...prev, data as ManualBadge]);
+          cancelBadgeEdit();
+        }
+      } else if (editingBadgeId) {
+        const { data, error } = await supabase
+          .from("manual_badges")
+          .update({
+            key: cleanKey,
+            label: badgeForm.label.trim(),
+            description: badgeForm.description.trim(),
+            icon_url: badgeForm.icon_url.trim(),
+            sort: Number(badgeForm.sort) || 0,
+            enabled: Boolean(badgeForm.enabled),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", editingBadgeId)
+          .select()
+          .single();
+        if (error) throw error;
+        if (data) {
+          setManualBadges((prev) =>
+            prev.map((b) => (b.id === editingBadgeId ? (data as ManualBadge) : b)),
+          );
+          cancelBadgeEdit();
+        }
+      }
+    } catch (err: unknown) {
+      setBadgeActionError(
+        err instanceof Error ? err.message : "Rozet kaydedilirken hata oluştu.",
+      );
+    }
+  }
+
+  async function handleDeleteManualBadge(id: string) {
+    if (!window.confirm("Bu rozeti silmek istediğinden emin misin?")) return;
+    try {
+      const supabase = createBrowserSupabase();
+      const { error } = await supabase.from("manual_badges").delete().eq("id", id);
+      if (error) throw error;
+      setManualBadges((prev) => prev.filter((b) => b.id !== id));
+      if (editingBadgeId === id) cancelBadgeEdit();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Rozet silinirken hata oluştu.");
+    }
+  }
+
+  async function handleToggleManualBadge(id: string, currentEnabled: boolean) {
+    try {
+      const supabase = createBrowserSupabase();
+      const nextEnabled = !currentEnabled;
+      const { error } = await supabase
+        .from("manual_badges")
+        .update({ enabled: nextEnabled, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      setManualBadges((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, enabled: nextEnabled } : b)),
+      );
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Görünürlük değiştirilemedi.");
+    }
+  }
+
+  async function handleMoveManualBadge(index: number, direction: "up" | "down") {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= manualBadges.length) return;
+    const list = [...manualBadges];
+    const currentBadge = list[index];
+    const targetBadge = list[targetIndex];
+
+    const currentSort = currentBadge.sort;
+    const targetSort = targetBadge.sort;
+    const newCurrentSort =
+      currentSort === targetSort
+        ? direction === "up"
+          ? targetSort - 1
+          : targetSort + 1
+        : targetSort;
+
+    list[index] = { ...targetBadge, sort: currentSort };
+    list[targetIndex] = { ...currentBadge, sort: newCurrentSort };
+    list.sort((a, b) => a.sort - b.sort);
+    setManualBadges(list);
+
+    try {
+      const supabase = createBrowserSupabase();
+      await Promise.all([
+        supabase
+          .from("manual_badges")
+          .update({ sort: newCurrentSort, updated_at: new Date().toISOString() })
+          .eq("id", currentBadge.id),
+        supabase
+          .from("manual_badges")
+          .update({ sort: currentSort, updated_at: new Date().toISOString() })
+          .eq("id", targetBadge.id),
+      ]);
+    } catch (err) {
+      console.error("Failed to reorder badges:", err);
+    }
+  }
+
+  async function handleUploadBadgeIcon(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.currentTarget.files?.[0];
+    e.currentTarget.value = "";
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      setBadgeActionError("Geçerli bir görsel (PNG, WebP, JPG, AVIF) seçin.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_FILE_SIZE) {
+      setBadgeActionError("Görsel boyutu 5 MB'dan küçük olmalıdır.");
+      return;
+    }
+
+    setIsUploadingBadgeIcon(true);
+    setBadgeActionError(null);
+    try {
+      const supabase = createBrowserSupabase();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Giriş süren dolmuş. Yeniden giriş yap.");
+
+      const ext =
+        file.type === "image/png"
+          ? "png"
+          : file.type === "image/webp"
+            ? "webp"
+            : "jpg";
+      const path = `${user.id}/badges/${crypto.randomUUID()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("profile-media")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("profile-media").getPublicUrl(path);
+      if (isValidBadgeIconUrl(data.publicUrl)) {
+        setBadgeForm((prev) => ({ ...prev, icon_url: data.publicUrl }));
+      }
+    } catch (err: unknown) {
+      setBadgeActionError(
+        err instanceof Error ? err.message : "Görsel yüklenirken hata oluştu.",
+      );
+    } finally {
+      setIsUploadingBadgeIcon(false);
+    }
+  }
+
   function toggleTestAudio() {
     if (!testAudioRef.current) return;
     if (testPlaying) {
@@ -913,6 +1197,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         cursor_trail: form.cursor_trail || "stardust",
         enable_click_ripple: Boolean(form.enable_click_ripple),
         discord_badges_mode: "auto",
+        disabled_discord_badges: form.disabled_discord_badges || [],
         links,
         links_layout: form.links_layout === "buttons" ? "buttons" : "dock",
         updated_at: new Date().toISOString(),
@@ -958,6 +1243,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
           discord_global_name: form.discord_global_name,
           discord_avatar_url: form.discord_avatar_url,
           discord_badges_mode: "auto",
+          disabled_discord_badges: form.disabled_discord_badges || [],
           accent_color: form.accent_color,
           surface_color: form.surface_color,
           links,
@@ -1468,6 +1754,17 @@ notify pgrst, 'reload schema';`;
             >
               <MessageCircle size={15} />
               <span>Discord & Spotify</span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "badges"}
+              onClick={() => setActiveTab("badges")}
+              className={`studio-tab-btn ${activeTab === "badges" ? "is-active" : ""}`}
+            >
+              <Award size={15} />
+              <span>Rozetler</span>
             </button>
 
             <button
@@ -2544,6 +2841,368 @@ notify pgrst, 'reload schema';`;
               </div>
             ) : null}
 
+            {/* 5.5. ROZET YÖNETİMİ TAB */}
+            {activeTab === "badges" ? (
+              <div className="studio-panel-pane">
+                <div className="pane-header">
+                  <div className="flex items-center gap-2">
+                    <Award size={18} className="text-yellow-400" />
+                    <h3>Rozet Yönetimi (Discord & Manuel Rozetler)</h3>
+                  </div>
+                  <p>
+                    Profil kartında kullanıcı adının yanında gösterilen rozetleri buradan yönetebilir, istemediğin Discord rozetlerini kapatabilir ve özel rozetler ekleyebilirsin.
+                  </p>
+                </div>
+
+                {/* 1. BÖLÜM: Otomatik Discord Rozetleri Görünürlük Yönetimi */}
+                <div className="studio-card mb-6">
+                  <div className="studio-card-header">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={16} className="text-blue-400" />
+                      <h4 className="font-semibold text-white">Otomatik Discord Rozetleri (Görünürlük Kontrolü)</h4>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Discord API ve bot üzerinden tespit edilen resmi Discord rozetleri. Profil kartında görünmesini istemediğin rozetleri kapatabilirsin.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                    {ALL_DISCORD_BADGES.map((badge) => {
+                      const isOff = (form.disabled_discord_badges || []).includes(badge.key);
+                      const isDetected = (presenceData.detectedBadges || []).some(
+                        (d) => d.key === badge.key || d.id === badge.key,
+                      );
+
+                      return (
+                        <div
+                          key={badge.key}
+                          className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-slate-900/60 hover:border-white/10 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-md bg-slate-800/80 flex items-center justify-center p-1 border border-white/5 shrink-0">
+                              <DiscordBadgeIcon badgeId={badge.key} size={20} />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-slate-200 truncate">
+                                  {badge.label}
+                                </span>
+                                {isDetected ? (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                                    Canlı
+                                  </span>
+                                ) : null}
+                              </div>
+                              <span className="text-xs text-slate-400 block truncate">
+                                {badge.description}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleDiscordBadgeVisibility(badge.key)}
+                            className={`px-3 py-1 text-xs rounded-md font-medium transition-colors shrink-0 ml-2 ${
+                              !isOff
+                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
+                                : "bg-slate-800 text-slate-400 border border-white/5 hover:text-slate-300"
+                            }`}
+                          >
+                            {!isOff ? "Görünür" : "Gizli"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. BÖLÜM: Özel ve Manuel Rozetler CRUD */}
+                <div className="studio-card">
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Award size={16} className="text-purple-400" />
+                        <h4 className="font-semibold text-white">Özel & Manuel Rozetler</h4>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Discord API&apos;sinde bulunmayan Nitro, Server Booster, topluluk rolleri veya özel rozetler ekle.
+                      </p>
+                    </div>
+
+                    {!isCreatingBadge && !editingBadgeId ? (
+                      <button
+                        type="button"
+                        onClick={startCreateBadge}
+                        className="studio-btn studio-btn-primary flex items-center gap-1.5 text-xs py-1.5 px-3"
+                      >
+                        <Plus size={14} />
+                        <span>Yeni Rozet Ekle</span>
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {/* Form for Creating / Editing a manual badge */}
+                  {isCreatingBadge || editingBadgeId ? (
+                    <div className="p-4 rounded-lg border border-purple-500/30 bg-purple-950/20 mb-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="text-sm font-semibold text-purple-200">
+                          {isCreatingBadge ? "Yeni Özel Rozet Tanımla" : "Rozeti Düzenle"}
+                        </h5>
+                        <button
+                          type="button"
+                          onClick={cancelBadgeEdit}
+                          className="text-slate-400 hover:text-white text-xs"
+                        >
+                          Kapat
+                        </button>
+                      </div>
+
+                      {badgeActionError ? (
+                        <div className="p-2.5 mb-3 rounded bg-red-950/50 border border-red-500/40 text-red-300 text-xs">
+                          {badgeActionError}
+                        </div>
+                      ) : null}
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-slate-300 block mb-1">
+                            Rozet Anahtarı (Key) *
+                          </label>
+                          <input
+                            type="text"
+                            value={badgeForm.key}
+                            onChange={(e) =>
+                              setBadgeForm((prev) => ({
+                                ...prev,
+                                key: sanitizeBadgeKey(e.target.value),
+                              }))
+                            }
+                            placeholder="nitro, booster, vip_member..."
+                            className="cyber-input w-full"
+                          />
+                          <span className="text-[11px] text-slate-500 mt-0.5 block">
+                            Benzersiz olmalıdır. Yalnızca küçük harf, rakam, tire ve alt çizgi.
+                          </span>
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-slate-300 block mb-1">
+                            Rozet Başlığı (Label) *
+                          </label>
+                          <input
+                            type="text"
+                            value={badgeForm.label}
+                            onChange={(e) =>
+                              setBadgeForm((prev) => ({ ...prev, label: e.target.value }))
+                            }
+                            placeholder="Discord Nitro, Server Booster..."
+                            className="cyber-input w-full"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="text-xs text-slate-300 block mb-1">
+                            Açıklama (Tooltip Metni)
+                          </label>
+                          <input
+                            type="text"
+                            value={badgeForm.description}
+                            onChange={(e) =>
+                              setBadgeForm((prev) => ({
+                                ...prev,
+                                description: e.target.value,
+                              }))
+                            }
+                            placeholder="Üzerine gelindiğinde veya dokunulduğunda görünen açıklama"
+                            className="cyber-input w-full"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="text-xs text-slate-300 block mb-1">
+                            İkon Görseli (URL veya Yükleme)
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={badgeForm.icon_url}
+                              onChange={(e) =>
+                                setBadgeForm((prev) => ({
+                                  ...prev,
+                                  icon_url: e.target.value,
+                                }))
+                              }
+                              placeholder="https://... veya /badges/nitro.png"
+                              className="cyber-input flex-1 mono-font"
+                            />
+                            <input
+                              type="file"
+                              ref={badgeIconInputRef}
+                              accept="image/png,image/webp,image/jpeg,image/avif"
+                              onChange={handleUploadBadgeIcon}
+                              className="hidden"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => badgeIconInputRef.current?.click()}
+                              disabled={isUploadingBadgeIcon}
+                              className="studio-btn studio-btn-secondary text-xs flex items-center gap-1.5 shrink-0"
+                            >
+                              {isUploadingBadgeIcon ? (
+                                <LoaderCircle size={14} className="animate-spin" />
+                              ) : (
+                                <Upload size={14} />
+                              )}
+                              <span>Görsel Yükle</span>
+                            </button>
+                          </div>
+                          <span className="text-[11px] text-slate-500 mt-1 block">
+                            Boş bırakılırsa anahtara göre &apos;public/badges/&#123;key&#125;.png&apos; veya vektör ikonu kullanılır.
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2">
+                          <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                            <input
+                              type="checkbox"
+                              checked={badgeForm.enabled}
+                              onChange={(e) =>
+                                setBadgeForm((prev) => ({
+                                  ...prev,
+                                  enabled: e.target.checked,
+                                }))
+                              }
+                              className="rounded border-white/20 bg-slate-800 text-blue-500 focus:ring-0"
+                            />
+                            <span>Bu rozet aktif olsun (profilde gösterilsin)</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-white/10">
+                        <button
+                          type="button"
+                          onClick={cancelBadgeEdit}
+                          className="studio-btn studio-btn-ghost text-xs"
+                        >
+                          Vazgeç
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveManualBadge}
+                          className="studio-btn studio-btn-primary text-xs"
+                        >
+                          {isCreatingBadge ? "Rozeti Kaydet" : "Güncelle"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Manual Badges List */}
+                  {isLoadingManualBadges ? (
+                    <div className="py-8 text-center text-slate-400 text-sm flex items-center justify-center gap-2">
+                      <LoaderCircle size={16} className="animate-spin" />
+                      <span>Özel rozetler yükleniyor...</span>
+                    </div>
+                  ) : manualBadges.length === 0 ? (
+                    <div className="p-8 text-center border border-dashed border-white/10 rounded-lg text-slate-400 text-sm">
+                      Henüz özel rozet eklenmemiş. Yukarıdaki &quot;Yeni Rozet Ekle&quot; butonuna tıklayarak ilk özel rozetini tanımlayabilirsin.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {manualBadges.map((b, index) => (
+                        <div
+                          key={b.id}
+                          className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-slate-900/60 hover:border-white/10 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-md bg-slate-800/80 flex items-center justify-center p-1 border border-white/5 shrink-0 overflow-hidden">
+                              {b.icon_url ? (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                  src={b.icon_url}
+                                  alt={b.label}
+                                  className="w-full h-full object-contain"
+                                />
+                              ) : (
+                                <DiscordBadgeIcon badgeId={b.key} size={20} />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-slate-200 truncate">
+                                  {b.label}
+                                </span>
+                                <code className="text-[10px] text-slate-400 px-1 py-0.5 rounded bg-white/5">
+                                  {b.key}
+                                </code>
+                              </div>
+                              {b.description ? (
+                                <span className="text-xs text-slate-400 block truncate">
+                                  {b.description}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                            <button
+                              type="button"
+                              onClick={() => handleMoveManualBadge(index, "up")}
+                              disabled={index === 0}
+                              className="studio-icon-btn"
+                              title="Yukarı Taşı"
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleMoveManualBadge(index, "down")}
+                              disabled={index === manualBadges.length - 1}
+                              className="studio-icon-btn"
+                              title="Aşağı Taşı"
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleToggleManualBadge(b.id, b.enabled)}
+                              className={`px-2.5 py-1 text-xs rounded font-medium transition-colors ${
+                                b.enabled
+                                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
+                                  : "bg-slate-800 text-slate-400 border border-white/5 hover:text-slate-300"
+                              }`}
+                            >
+                              {b.enabled ? "Aktif" : "Pasif"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => startEditBadge(b)}
+                              className="studio-icon-btn"
+                              title="Düzenle"
+                            >
+                              <SlidersHorizontal size={14} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteManualBadge(b.id)}
+                              className="studio-icon-btn danger"
+                              title="Sil"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
+
             {/* 6. SOSYAL ROZETLER TAB */}
             {activeTab === "socials" ? (
               <div className="studio-panel-pane">
@@ -3054,6 +3713,11 @@ notify pgrst, 'reload schema';`;
                       >
                         {form.display_name.trim() || form.discord_global_name || "Emir"}
                       </h2>
+                      <DiscordBadges
+                        discordUserId={form.discord_user_id}
+                        disabledBadges={form.disabled_discord_badges}
+                        manualBadges={manualBadges}
+                      />
                       {form.enable_moon_badge ? (
                         <MoonBadge title={form.moon_badge_title} />
                       ) : null}

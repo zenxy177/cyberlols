@@ -25,6 +25,7 @@ export type CursorTrail =
   | "ghost";
 
 export type DiscordBadgeMode = "auto" | "custom" | "both";
+export type { ManualBadge, DiscordBadge } from "./discord-badges";
 
 export type LinksLayout = "dock" | "buttons";
 export type EntranceEffectPreset = "signal_sweep" | "dial_lock" | "wave_pulse";
@@ -60,6 +61,7 @@ export type Profile = {
   discord_presence_text_scale: number;
   discord_presence_text_gap: number;
   discord_badges: string[];
+  disabled_discord_badges: string[];
   discord_badges_mode: DiscordBadgeMode;
   accent_color: string;
   surface_color: string;
@@ -126,6 +128,7 @@ export const EMPTY_PROFILE: Profile = {
   discord_presence_text_scale: 100,
   discord_presence_text_gap: 3,
   discord_badges: [],
+  disabled_discord_badges: [],
   discord_badges_mode: "auto",
   accent_color: "#78a7ff",
   surface_color: "#11131a",
@@ -337,6 +340,14 @@ export function normalizeProfile(value: unknown): Profile {
               typeof b === "string" && b.trim().length > 0,
           )
           .slice(0, 20)
+      : [],
+    disabled_discord_badges: Array.isArray(row.disabled_discord_badges)
+      ? row.disabled_discord_badges
+          .filter(
+            (b): b is string =>
+              typeof b === "string" && b.trim().length > 0,
+          )
+          .slice(0, 50)
       : [],
     discord_badges_mode: "auto",
     accent_color: isHexColor(row.accent_color)

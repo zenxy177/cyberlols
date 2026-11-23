@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import {
-  DiscordBadgeItem,
   type DiscordBadgeMode,
   resolveDiscordBadges,
 } from "@/lib/discord-badges";
+import { DiscordBadgeItem } from "@/lib/discord-badges-icons";
 
 export type DiscordPresenceAppearance = {
   width: number;

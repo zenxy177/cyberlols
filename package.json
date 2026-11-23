@@ -8,7 +8,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "npx tsx scripts/test-presence.ts",
-    "test:security": "tsx scripts/test-security.ts"
+    "test:badges": "tsx scripts/test-badges.ts",
+    "test:security": "tsx scripts/test-security.ts",
+    "test:all": "npx tsx scripts/test-presence.ts && tsx scripts/test-security.ts && tsx scripts/test-badges.ts"
   },
   "keywords": [],
   "author": "",
