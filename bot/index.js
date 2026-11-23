@@ -19,7 +19,7 @@ const isHttps = Boolean(
 );
 
 const PORT = Number(process.env.PORT || process.env.SERVER_PORT || 3001);
-const HOST = process.env.HOST || (isHttps ? "0.0.0.0" : "127.0.0.1");
+const HOST = process.env.HOST || "0.0.0.0";
 const API_KEY = (process.env.PRESENCE_API_KEY || "").trim();
 const TARGET_USER_ID = (process.env.TARGET_USER_ID || "").trim();
 const GUILD_ID_RAW = (process.env.GUILD_ID || "").trim();

@@ -488,13 +488,14 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
     const timeout = window.setTimeout(() => controller.abort(), 8000);
 
     fetch("/api/presence", { cache: "no-store", signal: controller.signal })
-      .then((res) => {
-        if (!res.ok) return null;
-        return res.json();
+      .then(async (res) => {
+        const json = await res.json().catch(() => null);
+        return { ok: res.ok, status: res.status, json };
       })
-      .then((payload) => {
+      .then((result) => {
         if (!isMounted) return;
-        if (payload?.success && payload.data) {
+        const payload = result?.json;
+        if (result?.ok && payload?.success && payload.data) {
           const d = payload.data;
           const statusText =
             d.discord_status === "online"
@@ -529,17 +530,22 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             spotify: spotifyInfo,
             detectedBadges,
           });
-        } else if (payload) {
+        } else if (payload?.error === "not_configured") {
           setPresenceData({
             status: "not_monitored",
-            details: "Presence botu veri döndürmedi",
+            details: "Vercel'de PRESENCE_API_URL / PRESENCE_API_KEY tanımlanmamış",
+            detectedBadges: [],
+          });
+        } else if (payload?.error === "unreachable" || payload?.error === "upstream_unavailable") {
+          setPresenceData({
+            status: "not_monitored",
+            details: "Wispbyte botuna ulaşılamadı (bot kapalı veya IP/Port ulaşılamıyor)",
             detectedBadges: [],
           });
         } else {
           setPresenceData({
             status: "not_monitored",
-            details:
-              "Presence botu bağlı değil (PRESENCE_API_URL / PRESENCE_API_KEY)",
+            details: payload?.error ? `Bot hatası: ${payload.error}` : "Presence botu bağlı değil",
             detectedBadges: [],
           });
         }
