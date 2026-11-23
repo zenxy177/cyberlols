@@ -6,7 +6,7 @@ const crypto = require("node:crypto");
 const http = require("node:http");
 const https = require("node:https");
 const fs = require("node:fs");
-const { Client, GatewayIntentBits, Partials } = require("discord.js");
+const { Client, GatewayIntentBits, Partials, Events } = require("discord.js");
 const { WebSocketServer, WebSocket } = require("ws");
 
 const sslCertPath = (process.env.SSL_CERT_PATH || "").trim();
@@ -427,7 +427,7 @@ async function startDiscord() {
   client.on("error", (error) => console.error("Discord client error:", error.message));
   client.on("warn", (message) => console.warn("Discord warning:", message));
 
-  client.once("ready", async () => {
+  client.once(Events.ClientReady, async () => {
     console.log(`Discord connected as ${client.user?.tag} (${client.user?.id})`);
     const guildList =
       client.guilds.cache.map((guild) => `${guild.name} (${guild.id})`).join(", ") || "yok";
